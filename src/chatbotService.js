@@ -16,7 +16,7 @@ const DATA_MODIFICATION_PATTERNS = [
   /\b(?:someone else'?s?|another user'?s?|other user'?s?)\b.{0,40}\b(?:data|hub|account|information)\b/i,
 ];
 
-const GREETING_PATTERN = /^\s*(?:hi|hello|hey|howdy|hiya|sup|what'?s up|good\s(?:morning|afternoon|evening))[!?,.\s]*$/i;
+const GREETING_PATTERN = /^\s*(?:hi(?:\s+there)?|hello(?:\s+there)?|hey(?:\s+there)?|howdy|hiya|sup|whatsup|wassup|what'?s\s*up|good\s(?:morning|afternoon|evening|day))[!?,.\s]*$/i;
 
 function checkGreeting(question) {
   if (!GREETING_PATTERN.test(question)) return null;
