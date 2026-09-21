@@ -16,6 +16,17 @@ const DATA_MODIFICATION_PATTERNS = [
   /\b(?:someone else'?s?|another user'?s?|other user'?s?)\b.{0,40}\b(?:data|hub|account|information)\b/i,
 ];
 
+const GREETING_PATTERN = /^\s*(?:hi|hello|hey|howdy|hiya|sup|what'?s up|good\s(?:morning|afternoon|evening))[!?,.\s]*$/i;
+
+function checkGreeting(question) {
+  if (!GREETING_PATTERN.test(question)) return null;
+  return {
+    responseType: 'GREETING',
+    text: 'Hi! I\'m Kahana\'s AI assistant. Ask me anything about hubs, Aura, earning, clubs, or getting started.',
+    citations: [],
+  };
+}
+
 function checkGuardrails(question) {
   if (SECURITY_PATTERNS.some((p) => p.test(question))) {
     return {
@@ -115,6 +126,13 @@ async function* geminiStream(question, matches, apiKey) {
 
 // Streaming entry point — yields { type:'chunk', text } then { type:'done', responseType, citations }
 export async function* streamAnswer(records, question, options = {}) {
+  const greeting = checkGreeting(question);
+  if (greeting) {
+    yield { type: 'chunk', text: greeting.text };
+    yield { type: 'done', responseType: greeting.responseType, citations: [] };
+    return;
+  }
+
   const blocked = checkGuardrails(question);
   if (blocked) {
     yield { type: 'chunk', text: blocked.text };
