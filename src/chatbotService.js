@@ -41,14 +41,12 @@ function answerFromHelpRecord(record, question) {
   );
   const sections = record.text.split(/\n\s*\n/).map((s) => s.trim()).filter(Boolean);
 
-  // Find the first section that contains a question word as the starting point
   let startIdx = 0;
   for (let i = 0; i < sections.length; i++) {
     const words = new Set(sections[i].toLowerCase().split(/[^a-z0-9]+/));
     if ([...questionWords].some((w) => words.has(w))) { startIdx = i; break; }
   }
 
-  // Build answer forward from startIdx, stopping at a section boundary before MAX_CHARS
   let text = '';
   for (let i = startIdx; i < sections.length; i++) {
     const candidate = text ? `${text}\n\n${sections[i]}` : sections[i];
@@ -59,7 +57,43 @@ function answerFromHelpRecord(record, question) {
   return text || sections.slice(0, 4).join('\n\n');
 }
 
-export function answerQuestion(records, question, options = {}) {
+async function generateWithGemini(question, matches, apiKey) {
+  const context = matches.slice(0, 3).map((doc) =>
+    `## ${doc.title}\n${doc.answer || doc.text.slice(0, 800)}`
+  ).join('\n\n---\n\n');
+
+  const prompt = `You are Kahana's helpful AI assistant. Answer the user's question using only the Kahana documentation provided below. Be concise (3–5 sentences max), friendly, and accurate. Do not mention Firebase, internal architecture, or anything not in the docs. If the docs don't fully cover the question, say so briefly and point the user to the Help centre.
+
+--- KAHANA DOCS ---
+${context}
+--- END DOCS ---
+
+User question: ${question}
+
+Answer:`;
+
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { maxOutputTokens: 300, temperature: 0.2 },
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`Gemini API ${response.status}: ${err}`);
+  }
+
+  const data = await response.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || null;
+}
+
+export async function answerQuestion(records, question, options = {}) {
   const blocked = checkGuardrails(question);
   if (blocked) return blocked;
 
@@ -72,14 +106,25 @@ export function answerQuestion(records, question, options = {}) {
     };
   }
 
+  const citations = matches.slice(0, 3).map((match) => ({
+    label: match.title,
+    href: match.href,
+    type: match.type,
+  }));
+
+  if (options.geminiKey) {
+    try {
+      const text = await generateWithGemini(question, matches, options.geminiKey);
+      if (text) return { responseType: 'ANSWER_FROM_KNOWLEDGE_BASE', text, citations };
+    } catch (error) {
+      console.error('Gemini error, falling back to keyword answer:', error.message);
+    }
+  }
+
   const bestMatch = matches[0];
   return {
     responseType: 'ANSWER_FROM_KNOWLEDGE_BASE',
     text: bestMatch.answer || answerFromHelpRecord(bestMatch, question),
-    citations: matches.slice(0, 3).map((match) => ({
-      label: match.title,
-      href: match.href,
-      type: match.type,
-    })),
+    citations,
   };
 }

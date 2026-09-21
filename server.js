@@ -9,6 +9,7 @@ const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 const uiDirectory = path.join(currentDirectory, 'ui');
 const port = Number(process.env.CHATBOT_PORT || 4173);
 const sourceRoot = process.env.KAHANA_KNOWLEDGE_SOURCE || path.resolve(currentDirectory, '../../kahana-homepage-public');
+const geminiKey = process.env.GEMINI_API_KEY || null;
 
 let records = [];
 
@@ -42,7 +43,7 @@ const server = http.createServer(async (request, response) => {
     if (request.method === 'POST' && request.url === '/api/chat') {
       const { question } = await readBody(request);
       if (typeof question !== 'string' || !question.trim()) return sendJson(response, 400, { error: 'Question is required' });
-      return sendJson(response, 200, answerQuestion(records, question));
+      return sendJson(response, 200, await answerQuestion(records, question, { geminiKey }));
     }
     if (request.method === 'GET' && request.url === '/api/health') {
       return sendJson(response, 200, { ok: true, records: records.length, sourceRoot });
