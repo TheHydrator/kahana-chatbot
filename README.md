@@ -8,31 +8,32 @@ This folder is an isolated workspace for the Kahana chatbot.
 - Do not add routes, providers, or build scripts here yet.
 - The current production application does not read this folder.
 
+---
+
 ## Architecture
 
 ```text
 kahana-homepage-public checkout
     |
     v
-src/knowledgeSource.js  -> normalized Help / FAQ records
+src/knowledgeSource.js   -> normalizes 26 help docs + 56 FAQ items into records
     |
     v
-src/retrieval.js        -> deterministic keyword retrieval + intent boosts
+src/retrieval.js         -> keyword search, stop-word filter, intent boosts, score threshold
     |
     v
-src/chatbotService.js   -> guardrails → retrieval → Gemini LLM → answer + citations
+src/chatbotService.js    -> greetings → guardrails → retrieval → Gemini stream → citations
+    |                       (retries Gemini once; fallback streams keyword answer in chunks)
+    v
+server.js                -> Node HTTP server
+                            POST /api/chat/stream  (SSE — used by UI)
+                            POST /api/chat         (JSON — backwards compat)
+                            GET  /api/health
     |
     v
-server.js               -> Node HTTP server  POST /api/chat  GET /api/health
-    |
-    v
-ui/                     -> browser chat panel (index.html + app.js + styles.css)
+ui/                      -> browser sidebar chat panel
+                            index.html  app.js  styles.css
 ```
-
-The source adapter reads Help articles from `data/docs/*.json` in the
-`kahana-homepage-public` checkout. FAQ records are generated from
-`data/platformFaq.js` into `data/faq-export.json` so this workspace does not
-import marketing-site code or depend on its build system.
 
 ---
 
@@ -40,14 +41,31 @@ import marketing-site code or depend on its build system.
 
 | Layer | File | Status |
 |-------|------|--------|
-| Knowledge loader | `src/knowledgeSource.js` | Done — loads 26 help docs + FAQ JSON |
-| Retrieval engine | `src/retrieval.js` | Done — token search, stop-word filter, intent boosts |
-| Guardrails | `src/chatbotService.js` | Done — blocks security / data-modification questions |
-| LLM answer | `src/chatbotService.js` | Done — Gemini synthesizes natural-language answers from retrieved docs |
-| Fallback | `src/chatbotService.js` | Done — falls back to keyword extraction if Gemini is unavailable |
-| HTTP server | `server.js` | Done — `POST /api/chat`, `GET /api/health`, static UI |
-| Chat UI | `ui/` | Done — sidebar panel, citation links, Enter to send, open/close toggle |
+| Knowledge loader | `src/knowledgeSource.js` | Done — loads 26 help docs + 56 FAQ items |
+| Retrieval engine | `src/retrieval.js` | Done — token search, stop-word filter, score threshold, intent boosts |
+| Off-topic rejection | `src/retrieval.js` | Done — off-topic questions (weather, pizza) correctly return no match |
+| Greetings | `src/chatbotService.js` | Done — hi / hello / hey / whatsup etc. get a friendly reply |
+| Guardrails | `src/chatbotService.js` | Done — blocks security, credentials, data-modification questions |
+| LLM answers | `src/chatbotService.js` | Done — Gemini Flash Lite synthesizes natural answers from retrieved docs |
+| Retry logic | `src/chatbotService.js` | Done — retries Gemini once (700ms delay) before falling back |
+| Streaming (TTFT) | `src/chatbotService.js` + `server.js` | Done — SSE stream, first token visible immediately |
+| Fallback streaming | `src/chatbotService.js` | Done — keyword answer streamed in 40-char chunks if Gemini fails |
+| HTTP server | `server.js` | Done — SSE + JSON endpoints, static UI, health check |
+| Streaming UI | `ui/app.js` | Done — bubble appears instantly, text streams token-by-token |
+| Typing indicator | `ui/app.js` + `ui/styles.css` | Done — three animated dots while waiting for first token |
+| Enter to send | `ui/app.js` | Done — Enter sends, Shift+Enter creates new line |
 | FAQ export | `data/faq-export.json` | Generated from `kahana-homepage-public/data/platformFaq.js` |
+
+---
+
+## Response types
+
+| `responseType` | When |
+|---|---|
+| `GREETING` | Recognised greeting (hi, hello, hey, whatsup…) |
+| `ANSWER_FROM_KNOWLEDGE_BASE` | Matched a help doc or FAQ item |
+| `I_DONT_UNDERSTAND` | No relevant Kahana match found |
+| `REFUSE_AND_REDIRECT` | Security, credentials, or data-modification request |
 
 ---
 
@@ -73,15 +91,15 @@ Kahana/
 
 ### 3. Create a `.env` file
 
-Create a file called `.env` inside the `chatbot/` folder (it is gitignored — never commit it):
+Create a file called `.env` inside the `chatbot/` folder (gitignored — never commit it):
 
-```bash
+```
 GEMINI_API_KEY=your_key_here
 ```
 
 ### 4. Generate the FAQ export (one time only)
 
-Run this from inside the `chatbot/` folder:
+Run from inside the `chatbot/` folder:
 
 ```bash
 node --input-type=module <<'EOF'
@@ -108,30 +126,38 @@ Open **http://localhost:4173** in a browser.
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `GEMINI_API_KEY` | _(none)_ | Gemini API key — without it the chatbot falls back to keyword answers |
+| `GEMINI_API_KEY` | _(none)_ | Free Gemini key — without it answers fall back to keyword extraction |
 | `KAHANA_KNOWLEDGE_SOURCE` | `../../kahana-homepage-public` | Path to homepage checkout |
 | `CHATBOT_PORT` | `4173` | HTTP port |
 
 ---
 
-## Response types
+## API reference
 
-| `responseType` | When |
-|---|---|
-| `ANSWER_FROM_KNOWLEDGE_BASE` | Matched a help doc or FAQ item — Gemini writes the answer |
-| `I_DONT_UNDERSTAND` | No relevant match found |
-| `REFUSE_AND_REDIRECT` | Security, architecture, credentials, or data-modification request |
-
----
-
-## Health check
+### Health check
 
 ```bash
 curl http://localhost:4173/api/health
 # {"ok":true,"records":26,"sourceRoot":"..."}
 ```
 
-## Chat API
+### Streaming chat (used by UI)
+
+```bash
+curl -N -X POST http://localhost:4173/api/chat/stream \
+  -H "Content-Type: application/json" \
+  -d '{"question":"what is a hub"}'
+```
+
+SSE event stream — each line is `data: <json>`:
+
+```
+data: {"type":"chunk","text":"A hub is"}
+data: {"type":"chunk","text":" a curated space..."}
+data: {"type":"done","responseType":"ANSWER_FROM_KNOWLEDGE_BASE","citations":[...]}
+```
+
+### JSON chat (backwards compat)
 
 ```bash
 curl -X POST http://localhost:4173/api/chat \
@@ -145,8 +171,8 @@ curl -X POST http://localhost:4173/api/chat \
 
 ### 1. Wire in FAQ data at startup
 
-Pass `faqPath` to `loadKnowledgeBase` in `server.js` so the 56 FAQ items are
-loaded alongside the 26 help docs, giving the retrieval layer more coverage.
+Pass `faqPath` to `loadKnowledgeBase` in `server.js` so the 56 FAQ items load
+alongside the 26 help docs at boot, giving retrieval broader coverage.
 
 ### 2. Action buttons
 
