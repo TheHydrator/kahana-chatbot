@@ -37,6 +37,13 @@ input.addEventListener('input', () => {
   document.querySelector('.send-button').classList.toggle('ready', Boolean(input.value.trim()));
 });
 
+input.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    composer.requestSubmit();
+  }
+});
+
 async function askKnowledgeBase(message) {
   const response = await fetch('/api/chat', {
     method: 'POST',
