@@ -20,7 +20,7 @@ src/knowledgeSource.js  -> normalized Help / FAQ records
 src/retrieval.js        -> deterministic keyword retrieval + intent boosts
     |
     v
-src/chatbotService.js   -> answer + citation contract  (LLM layer goes here next)
+src/chatbotService.js   -> guardrails → retrieval → Gemini LLM → answer + citations
     |
     v
 server.js               -> Node HTTP server  POST /api/chat  GET /api/health
@@ -40,71 +40,98 @@ import marketing-site code or depend on its build system.
 
 | Layer | File | Status |
 |-------|------|--------|
-| Knowledge loader | `src/knowledgeSource.js` | Done — loads 26 help docs + optional FAQ JSON |
+| Knowledge loader | `src/knowledgeSource.js` | Done — loads 26 help docs + FAQ JSON |
 | Retrieval engine | `src/retrieval.js` | Done — token search, stop-word filter, intent boosts |
-| Answer service | `src/chatbotService.js` | Done — returns `{ responseType, text, citations }` |
+| Guardrails | `src/chatbotService.js` | Done — blocks security / data-modification questions |
+| LLM answer | `src/chatbotService.js` | Done — Gemini synthesizes natural-language answers from retrieved docs |
+| Fallback | `src/chatbotService.js` | Done — falls back to keyword extraction if Gemini is unavailable |
 | HTTP server | `server.js` | Done — `POST /api/chat`, `GET /api/health`, static UI |
-| Chat UI | `ui/` | Done — sidebar panel, citation links, open/close toggle |
+| Chat UI | `ui/` | Done — sidebar panel, citation links, Enter to send, open/close toggle |
 | FAQ export | `data/faq-export.json` | Generated from `kahana-homepage-public/data/platformFaq.js` |
-
-The chatbot runs fully locally with no external API calls. Answers come from
-the 26 help docs and the 56 FAQ items loaded at startup.
-
-### Known fix applied
-
-The original `answerFromHelpRecord` cherry-picked the 3 highest-scoring
-sections non-contiguously, which orphaned headings from their bodies and cut
-answers mid-sentence. The fix starts at the first matching section and reads
-forward in document order, stopping at a clean section boundary before
-1 400 characters. Answers are now complete paragraphs.
 
 ---
 
-## Running locally
+## Setup (first time)
 
-### Prerequisites
+### 1. Prerequisites
 
 - Node.js 18+
 - `kahana-homepage-public` cloned as a sibling of `kahana-web`
-  (`/path/to/Kahana/kahana-homepage-public`)
 
-### Generate the FAQ export (one time)
+```
+Kahana/
+  kahana-homepage-public/   ← clone this
+  kahana-web/
+    chatbot/                ← you are here
+```
+
+### 2. Get a free Gemini API key
+
+1. Go to **https://aistudio.google.com/app/apikey**
+2. Sign in with Google → click **Create API key**
+3. Copy the key
+
+### 3. Create a `.env` file
+
+Create a file called `.env` inside the `chatbot/` folder (it is gitignored — never commit it):
+
+```bash
+GEMINI_API_KEY=your_key_here
+```
+
+### 4. Generate the FAQ export (one time only)
+
+Run this from inside the `chatbot/` folder:
 
 ```bash
 node --input-type=module <<'EOF'
 import { FAQ_SECTIONS } from '../../kahana-homepage-public/data/platformFaq.js';
 import fs from 'node:fs';
 const out = FAQ_SECTIONS.map(({ title, items }) => ({ title, items }));
+fs.mkdirSync('./data', { recursive: true });
 fs.writeFileSync('./data/faq-export.json', JSON.stringify(out, null, 2));
 console.log('FAQ items written:', out.reduce((n, s) => n + s.items.length, 0));
 EOF
 ```
 
-### Start the server
+### 5. Start the server
 
 ```bash
-# From the chatbot/ folder
-node server.js
+npm run start:ui
 ```
 
 Open **http://localhost:4173** in a browser.
 
-### Environment variables (all optional)
+---
+
+## Environment variables
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
+| `GEMINI_API_KEY` | _(none)_ | Gemini API key — without it the chatbot falls back to keyword answers |
 | `KAHANA_KNOWLEDGE_SOURCE` | `../../kahana-homepage-public` | Path to homepage checkout |
-| `CHATBOT_FAQ_PATH` | _(not wired yet)_ | Path to FAQ JSON export |
 | `CHATBOT_PORT` | `4173` | HTTP port |
 
-### Health check
+---
+
+## Response types
+
+| `responseType` | When |
+|---|---|
+| `ANSWER_FROM_KNOWLEDGE_BASE` | Matched a help doc or FAQ item — Gemini writes the answer |
+| `I_DONT_UNDERSTAND` | No relevant match found |
+| `REFUSE_AND_REDIRECT` | Security, architecture, credentials, or data-modification request |
+
+---
+
+## Health check
 
 ```bash
 curl http://localhost:4173/api/health
 # {"ok":true,"records":26,"sourceRoot":"..."}
 ```
 
-### Chat API
+## Chat API
 
 ```bash
 curl -X POST http://localhost:4173/api/chat \
@@ -112,44 +139,22 @@ curl -X POST http://localhost:4173/api/chat \
   -d '{"question":"what is a hub"}'
 ```
 
-Response contract:
-
-```json
-{
-  "responseType": "ANSWER_FROM_KNOWLEDGE_BASE",
-  "text": "...",
-  "citations": [
-    { "label": "Hubs", "href": "https://about.kahana.io/help/hubs", "type": "help" }
-  ]
-}
-```
-
-`responseType` is one of `ANSWER_FROM_KNOWLEDGE_BASE` or `I_DONT_UNDERSTAND`.
-
 ---
 
 ## What is next
 
-### 1. LLM integration (next step)
-
-Wire an API key (Claude or OpenAI) into `src/chatbotService.js`. The retrieval
-layer already surfaces the best matching records — the plan is to pass those
-records as context to the model so answers are natural language instead of raw
-doc excerpts. The `{ responseType, text, citations }` contract stays the same;
-only the text generation changes.
-
-### 2. Wire in FAQ data at startup
+### 1. Wire in FAQ data at startup
 
 Pass `faqPath` to `loadKnowledgeBase` in `server.js` so the 56 FAQ items are
 loaded alongside the 26 help docs, giving the retrieval layer more coverage.
 
-### 3. Action buttons
+### 2. Action buttons
 
 The Feedback / Support / Contact buttons in the UI currently call
 `window.alert`. They should navigate to the real in-app routes
 (`/support`, `/contact`, feedback modal).
 
-### 4. Production integration
+### 3. Production integration
 
 When the chatbot is ready, add a route and provider in `src/` and remove the
 production boundary in this README. Until then, `src/` is untouched.
