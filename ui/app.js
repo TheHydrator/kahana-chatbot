@@ -34,7 +34,11 @@ function createStreamingBubble() {
   icon.className = 'mini-agent';
   icon.textContent = 'AI';
   const bubble = document.createElement('div');
-  bubble.className = 'agent-bubble live-answer streaming';
+  bubble.className = 'agent-bubble live-answer';
+  const dots = document.createElement('div');
+  dots.className = 'typing-indicator';
+  for (let i = 0; i < 3; i++) dots.append(document.createElement('span'));
+  bubble.append(dots);
   row.append(icon, bubble);
   thread.append(row);
   thread.scrollTop = thread.scrollHeight;
@@ -87,6 +91,7 @@ async function streamQuestion(message) {
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
+  let textNode = null;
 
   while (true) {
     const { done, value } = await reader.read();
@@ -101,10 +106,14 @@ async function streamQuestion(message) {
       try { event = JSON.parse(line.slice(6)); } catch { continue; }
 
       if (event.type === 'chunk') {
-        bubble.textContent += event.text;
+        if (!textNode) {
+          bubble.querySelector('.typing-indicator')?.remove();
+          textNode = document.createTextNode('');
+          bubble.append(textNode);
+        }
+        textNode.textContent += event.text;
         thread.scrollTop = thread.scrollHeight;
       } else if (event.type === 'done') {
-        bubble.classList.remove('streaming');
         appendCitations(bubble, event.citations);
         thread.scrollTop = thread.scrollHeight;
       }
