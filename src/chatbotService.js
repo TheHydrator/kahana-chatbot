@@ -85,17 +85,25 @@ Answer:`;
 }
 
 async function* geminiStream(question, matches, apiKey) {
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:streamGenerateContent?alt=sse&key=${apiKey}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: buildPrompt(question, matches) }] }],
-        generationConfig: { maxOutputTokens: 512, temperature: 0.2 },
-      }),
-    }
-  );
+  const abort = new AbortController();
+  const timer = setTimeout(() => abort.abort(), 6000);
+  let response;
+  try {
+    response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:streamGenerateContent?alt=sse&key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: buildPrompt(question, matches) }] }],
+          generationConfig: { maxOutputTokens: 512, temperature: 0.2 },
+        }),
+        signal: abort.signal,
+      }
+    );
+  } finally {
+    clearTimeout(timer);
+  }
 
   if (!response.ok) {
     const err = await response.text();
@@ -159,7 +167,7 @@ export async function* streamAnswer(records, question, options = {}) {
         return;
       } catch (error) {
         if (attempt === 0) {
-          await new Promise((resolve) => setTimeout(resolve, 700));
+          await new Promise((resolve) => setTimeout(resolve, 300));
         } else {
           console.error('Gemini failed after retry, using fallback:', error.message);
         }
