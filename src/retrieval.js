@@ -1,6 +1,8 @@
 const STOP_WORDS = new Set([
   'about', 'after', 'also', 'does', 'from', 'have', 'how', 'that', 'the',
   'this', 'what', 'when', 'where', 'which', 'with', 'would', 'you', 'can', 'do',
+  // generic meta-verbs that carry no Kahana-specific signal
+  'tell', 'show', 'give', 'explain', 'describe', 'find', 'get', 'see', 'use', 'make',
 ]);
 
 function addIntentBoost(question, title, score) {
@@ -43,7 +45,7 @@ export function retrieve(records, question, { limit = 5 } = {}) {
       const score = addIntentBoost(question, record.title, matches.length + titleMatches.length * 6);
       return { record, score };
     })
-    .filter((result) => result.score > 0)
+    .filter((result) => result.score >= (questionTokens.size >= 2 ? 2 : 1))
     .sort((left, right) => right.score - left.score)
     .slice(0, limit)
     .map(({ record, score }) => ({ ...record, score }));
