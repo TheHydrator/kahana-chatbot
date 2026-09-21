@@ -150,20 +150,30 @@ export async function* streamAnswer(records, question, options = {}) {
   const citations = matches.slice(0, 3).map((m) => ({ label: m.title, href: m.href, type: m.type }));
 
   if (options.geminiKey) {
-    try {
-      for await (const chunk of geminiStream(question, matches, options.geminiKey)) {
-        yield { type: 'chunk', text: chunk };
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        for await (const chunk of geminiStream(question, matches, options.geminiKey)) {
+          yield { type: 'chunk', text: chunk };
+        }
+        yield { type: 'done', responseType: 'ANSWER_FROM_KNOWLEDGE_BASE', citations };
+        return;
+      } catch (error) {
+        if (attempt === 0) {
+          await new Promise((resolve) => setTimeout(resolve, 700));
+        } else {
+          console.error('Gemini failed after retry, using fallback:', error.message);
+        }
       }
-      yield { type: 'done', responseType: 'ANSWER_FROM_KNOWLEDGE_BASE', citations };
-      return;
-    } catch (error) {
-      console.error('Gemini stream error, falling back:', error.message);
     }
   }
 
-  // Fallback: instant keyword answer
-  const bestMatch = matches[0];
-  yield { type: 'chunk', text: bestMatch.answer || answerFromHelpRecord(bestMatch, question) };
+  // Fallback: stream in small chunks so TTFT still feels smooth
+  const text = (matches[0].answer || answerFromHelpRecord(matches[0], question));
+  const CHUNK = 40;
+  for (let i = 0; i < text.length; i += CHUNK) {
+    yield { type: 'chunk', text: text.slice(i, i + CHUNK) };
+    await new Promise((resolve) => setTimeout(resolve, 18));
+  }
   yield { type: 'done', responseType: 'ANSWER_FROM_KNOWLEDGE_BASE', citations };
 }
 
