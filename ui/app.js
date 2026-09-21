@@ -27,6 +27,37 @@ function addMessage(text, role) {
   thread.scrollTop = thread.scrollHeight;
 }
 
+function createStreamingBubble() {
+  const row = document.createElement('div');
+  row.className = 'message-row agent-row';
+  const icon = document.createElement('div');
+  icon.className = 'mini-agent';
+  icon.textContent = 'AI';
+  const bubble = document.createElement('div');
+  bubble.className = 'agent-bubble live-answer streaming';
+  row.append(icon, bubble);
+  thread.append(row);
+  thread.scrollTop = thread.scrollHeight;
+  return bubble;
+}
+
+function appendCitations(bubble, citations) {
+  if (!citations?.length) return;
+  const div = document.createElement('div');
+  div.className = 'answer-citations';
+  div.textContent = 'Sources: ';
+  citations.forEach((citation, index) => {
+    const link = document.createElement('a');
+    link.href = citation.href;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = citation.label;
+    div.append(link);
+    if (index < citations.length - 1) div.append(' | ');
+  });
+  bubble.append(div);
+}
+
 closeButton.addEventListener('click', closePanel);
 reopenButton.addEventListener('click', () => {
   panel.classList.remove('closed');
@@ -44,43 +75,41 @@ input.addEventListener('keydown', (event) => {
   }
 });
 
-async function askKnowledgeBase(message) {
-  const response = await fetch('/api/chat', {
+async function streamQuestion(message) {
+  const response = await fetch('/api/chat/stream', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ question: message }),
   });
-  if (!response.ok) throw new Error(`Chat request failed: ${response.status}`);
-  return response.json();
-}
+  if (!response.ok) throw new Error(`Stream failed: ${response.status}`);
 
-function addAnswer(answer) {
-  const row = document.createElement('div');
-  row.className = 'message-row agent-row';
-  const icon = document.createElement('div');
-  icon.className = 'mini-agent';
-  icon.textContent = 'AI';
-  const bubble = document.createElement('div');
-  bubble.className = 'agent-bubble live-answer';
-  bubble.textContent = answer.text;
-  if (answer.citations?.length) {
-    const citations = document.createElement('div');
-    citations.className = 'answer-citations';
-    citations.textContent = 'Sources: ';
-    answer.citations.forEach((citation, index) => {
-      const link = document.createElement('a');
-      link.href = citation.href;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      link.textContent = citation.label;
-      citations.append(link);
-      if (index < answer.citations.length - 1) citations.append(' | ');
-    });
-    bubble.append(citations);
+  const bubble = createStreamingBubble();
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() ?? '';
+
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue;
+      let event;
+      try { event = JSON.parse(line.slice(6)); } catch { continue; }
+
+      if (event.type === 'chunk') {
+        bubble.textContent += event.text;
+        thread.scrollTop = thread.scrollHeight;
+      } else if (event.type === 'done') {
+        bubble.classList.remove('streaming');
+        appendCitations(bubble, event.citations);
+        thread.scrollTop = thread.scrollHeight;
+      }
+    }
   }
-  row.append(icon, bubble);
-  thread.append(row);
-  thread.scrollTop = thread.scrollHeight;
 }
 
 composer.addEventListener('submit', async (event) => {
@@ -91,10 +120,9 @@ composer.addEventListener('submit', async (event) => {
   input.value = '';
   document.querySelector('.send-button').classList.remove('ready');
   try {
-    const answer = await askKnowledgeBase(message);
-    addAnswer(answer);
+    await streamQuestion(message);
   } catch {
-    addMessage('The local knowledge service is not running yet. Please use Blogs, Docs, or Contact support below for now.', 'agent');
+    addMessage('Could not reach the chatbot server. Make sure it is running on port 4173.', 'agent');
   }
 });
 

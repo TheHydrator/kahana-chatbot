@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadKnowledgeBase } from './src/knowledgeSource.js';
-import { answerQuestion } from './src/chatbotService.js';
+import { answerQuestion, streamAnswer } from './src/chatbotService.js';
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 const uiDirectory = path.join(currentDirectory, 'ui');
@@ -40,6 +40,16 @@ async function serveStatic(request, response) {
 
 const server = http.createServer(async (request, response) => {
   try {
+    if (request.method === 'POST' && request.url === '/api/chat/stream') {
+      const { question } = await readBody(request);
+      if (typeof question !== 'string' || !question.trim()) return sendJson(response, 400, { error: 'Question is required' });
+      response.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' });
+      for await (const event of streamAnswer(records, question, { geminiKey })) {
+        response.write(`data: ${JSON.stringify(event)}\n\n`);
+      }
+      response.end();
+      return;
+    }
     if (request.method === 'POST' && request.url === '/api/chat') {
       const { question } = await readBody(request);
       if (typeof question !== 'string' || !question.trim()) return sendJson(response, 400, { error: 'Question is required' });
