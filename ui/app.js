@@ -88,6 +88,9 @@ async function streamQuestion(message) {
   if (!response.ok) throw new Error(`Stream failed: ${response.status}`);
 
   const bubble = createStreamingBubble();
+  // Yield to the browser's render pipeline so dots are painted before
+  // we start consuming the stream (fast/buffered responses skip this otherwise)
+  await new Promise((resolve) => requestAnimationFrame(resolve));
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
