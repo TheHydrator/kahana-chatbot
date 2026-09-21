@@ -1,5 +1,39 @@
 import { retrieve } from './retrieval.js';
 
+const SECURITY_PATTERNS = [
+  /\b(?:another|other)\s+user\b.{0,60}\b(?:data|profile|hub|information)\b/i,
+  /\b(?:firebase|firestore)\b.{0,60}\b(?:data|security|architecture|credentials?|tokens?)\b/i,
+  /\b(?:security|architecture|database)\b.{0,60}\b(?:details?|structure|credentials?|exploit)\b/i,
+  /\b(?:tell me about|how does|what is)\b.{0,40}\barchitecture\b/i,
+  /\b(?:bypass|circumvent)\b.{0,30}\bsecurity\b/i,
+  /\bexploit\b/i,
+  /\bransom\b/i,
+  /\b(?:show|give|reveal)\b.{0,30}\b(?:credentials?|passwords?|api\s*keys?|secrets?)\b/i,
+];
+
+const DATA_MODIFICATION_PATTERNS = [
+  /\b(?:delete|modify|change|update)\b.{0,40}\b(?:data|hub|account|information)\b/i,
+  /\b(?:someone else'?s?|another user'?s?|other user'?s?)\b.{0,40}\b(?:data|hub|account|information)\b/i,
+];
+
+function checkGuardrails(question) {
+  if (SECURITY_PATTERNS.some((pattern) => pattern.test(question))) {
+    return {
+      responseType: 'REFUSE_AND_REDIRECT',
+      text: 'I can\'t provide private implementation or security details. For account-specific help, please use the Support form.',
+      citations: [{ label: 'Contact support', href: 'https://app.kahana.io/support' }],
+    };
+  }
+  if (DATA_MODIFICATION_PATTERNS.some((pattern) => pattern.test(question))) {
+    return {
+      responseType: 'REFUSE_AND_REDIRECT',
+      text: 'I can\'t modify Kahana data from here. Use the relevant controls in the app, or reach out to support if you need help.',
+      citations: [{ label: 'Contact support', href: 'https://app.kahana.io/support' }],
+    };
+  }
+  return null;
+}
+
 function answerFromHelpRecord(record, question) {
   const MAX_CHARS = 1400;
   const questionWords = new Set(
@@ -26,6 +60,9 @@ function answerFromHelpRecord(record, question) {
 }
 
 export function answerQuestion(records, question, options = {}) {
+  const blocked = checkGuardrails(question);
+  if (blocked) return blocked;
+
   const matches = retrieve(records, question, options);
   if (!matches.length) {
     return {
