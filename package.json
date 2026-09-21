@@ -1,0 +1,9 @@
+{
+  "name": "kahana-chatbot-workspace",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node --check src/knowledgeSource.js && node --check src/retrieval.js && node --check src/chatbotService.js && node --check server.js",
+    "start:ui": "node server.js"
+  }
+}

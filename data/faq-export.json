@@ -1,0 +1,322 @@
+[
+  {
+    "title": "General",
+    "items": [
+      {
+        "id": "benefits",
+        "question": "What are the benefits of Kahana?",
+        "answer": "Kahana gives you one place to share what you know, help others learn, and get found.\n\nIf you contribute, you publish hubs of digital artifacts (files, videos, images, PDFs, documents, links, and more). You can list them on Library, invite collaborators, earn Aura when people value your work, and turn on paid access later if you want.\n\nIf you are here to learn, you browse careful, curated hubs in one catalog. Save what matters. Skip chasing scattered links or DMs.\n\nAura is how the community shows what is worth your time, so the best work can rise."
+      },
+      {
+        "id": "value-prop",
+        "question": "What makes Kahana different from everything else?",
+        "answer": "The difference is quality. Kahana is built so the best contributions can rise, and people can trust what they find.\n\nWe do that with Aura, not another pile of star ratings and written reviews. Those systems often fail both sides: one negative review can drown out many careful positive ones, people chase review counts more than the score, and a perfect rating with almost no reviews (or a flood of glowing ones) can feel untrustworthy.\n\nAura is different on purpose. You automatically have a small daily budget (up to 5 Aura per day) that is yours to give and take. Your Aura renews daily: at midnight UTC you get 5 Aura again, even if you gave all 5 already. You can put it all on one hub or split it across a few. You cannot give Aura to your own work. Because your Aura is scarce, you give it carefully. That careful signal is what lifts quality across the library."
+      },
+      {
+        "id": "optimize-benefits",
+        "question": "How do I optimize the benefits of Kahana?",
+        "answer": "It depends on whether you are learning or contributing.\n\nFor learners: open Library, search and filter, open hubs you care about, then save or follow after you sign in. Give Aura carefully (up to 5/day). Step-by-step: /help/get-started-learners.\n\nFor contributors: share what you know. Don't overthink the first publish. Use clear hub names, filenames, tags, and descriptions so people can find your work. List public hubs on Library. Check analytics for views, saves, Aura, and purchases (/help/creator-analytics), then keep improving. Turn on paid access later if you want."
+      },
+      {
+        "id": "what-is-kahana",
+        "question": "What is Kahana?",
+        "answer": "Kahana is a library for curated digital knowledge.\n\nYou contribute hubs of digital artifacts (files, videos, images, PDFs, documents, links, and more). People can find them on Library. You earn Aura when someone values your work. Learners browse and learn in one place.\n\nPaid access is optional. We added it later, after people asked to earn from their best hubs."
+      },
+      {
+        "id": "name-kahana",
+        "question": "Why is it called Kahana?",
+        "answer": "It started as a typo. Adam, our founder, texted his friend Jonathan: this was the Big Kahuna of ideas. Autocorrect turned Kahuna into Kahana. The word was so beautiful we made it the company name.\n\nWe later learned that kahana can mean turning point in ancient Hawaiian, and that Kahani means story in Hindi. We felt we could not have picked a better name. It felt like destiny. The rest is history. We love to pay homage to that namesake."
+      },
+      {
+        "id": "not-hawaii-or-kahana-co",
+        "question": "Is Kahana the same as Kahana Bay, Hawaii, or kahana.co?",
+        "answer": "No. This Kahana is a digital library at kahana.io. We publish hubs of ebooks, files, and clubs. Aura Library is the product.\n\nWe are not Kahana Bay, Kahana Valley, or other Hawaii places that share the name.\n\nWe do not own or operate kahana.co. That site is unrelated.\n\nOasis Browser was an earlier Kahana product. It is not the library. See “What was Oasis Browser?”"
+      },
+      {
+        "id": "oasis-browser",
+        "question": "What was Oasis Browser?",
+        "answer": "Oasis Browser was an earlier Kahana product for Mac. We launched it on Product Hunt and ran a beta. After user feedback, we ceased development because we could not make it sustainable at this time. It is not the Aura Library.\n\nThe current product is the digital library at kahana.io. Product Hunt launch: https://www.producthunt.com/products/kahana/launches/oasis-browser-for-mac\n\nIf you want to use Oasis Browser, reach out through the contact form: https://kahana.io/contact"
+      },
+      {
+        "id": "who-operates",
+        "question": "Who operates Kahana?",
+        "answer": "Kahana Group Inc."
+      },
+      {
+        "id": "where-start",
+        "question": "Where do I start?",
+        "answer": "Want to learn? Open Library at kahana.io/library, or follow /help/get-started-learners.\n\nWant to share? Sign up and follow /help/get-started-creators: create a hub, add content, then list on Library when ready. You can turn on paid access later if you want."
+      },
+      {
+        "id": "about-info",
+        "question": "Where is company / About information?",
+        "answer": "Visit about.kahana.io.\n\nIn the app, open About from the guest header. Or go to Settings & support, then Resources, when you are logged in."
+      },
+      {
+        "id": "vs-tools",
+        "question": "How is Kahana different from Gumroad, Linktree, or Notion?",
+        "answer": "Gumroad is built around selling. Linktree is light on finding hubs. Notion and Drive are great for private work, but they are not a public library with community signal.\n\nKahana starts with contribution and Library, plus Aura. Optional earning came later because contributors asked for it.\n\nLonger comparisons: /blog/kahana-vs-gumroad-stan · /blog/kahana-vs-linktree · /blog/kahana-vs-notion-google-drive."
+      },
+      {
+        "id": "can-earn",
+        "question": "Can I earn money when people access my hubs?",
+        "answer": "Yes, if you want to.\n\nKahana started as knowledge sharing only. After someone asked to earn when others accessed their top hubs, we added paid access.\n\nWhen you are ready, connect Stripe, set a price, and charge for access. Sharing and discovery still come first."
+      }
+    ]
+  },
+  {
+    "title": "For creators",
+    "items": [
+      {
+        "id": "what-is-hub",
+        "question": "What is a hub?",
+        "answer": "A hub is a curated place for digital artifacts: files, videos, images, PDFs, documents, links, and more. You can invite collaborators if you want.\n\nKeep it private, make it public, list it on Library, and charge for access later if you choose."
+      },
+      {
+        "id": "content-rights",
+        "question": "Can I upload public-domain ebooks or openly licensed files?",
+        "answer": "Yes, when the work is public domain or under a license that allows redistribution on platforms like Kahana. Include any required attribution. Before a hub is unlisted, listed on Library, or monetized, you must confirm you have the right to share (and, if monetizing, sell access to) all content in it.\n\nFinding a file online is not permission. Full guide: /help/content-rights. Binding rules: Terms §8 (User Content)."
+      },
+      {
+        "id": "how-sell",
+        "question": "How do I turn on paid access for a hub?",
+        "answer": "Contribute a hub and add your content. Make it public and list it on Library when it is ready.\n\nTo earn from access, connect Stripe, turn on monetization, and set a one-time or monthly price. Step-by-step: /help/turn-on-paid-access. Then share your link, or let people find you on Library."
+      },
+      {
+        "id": "creator-cost",
+        "question": "How much does Kahana cost for creators?",
+        "answer": "Free is $0. You get up to 3 hubs, unlimited collaborators, and files up to about 5 MB. You can still charge for access if you want.\n\nGrowth is $9.99 a month or $99.99 a year. You get unlimited hubs and uploads, live chat support, 100 GB of storage, and files up to 5 GB.\n\nWhen to upgrade (vs stay Free): /help/when-to-upgrade. Full comparison: /pricing. Open Billing in the app for the latest plan details."
+      },
+      {
+        "id": "platform-fee",
+        "question": "What fee does Kahana take on sales?",
+        "answer": "Kahana takes 5% on hub sales processed through Stripe Connect.\n\nStripe also charges its usual processing fees (often about 2.9% + $0.30 for US cards). Kahana does not hold your funds. Stripe handles payouts."
+      },
+      {
+        "id": "need-stripe",
+        "question": "Do I need Stripe?",
+        "answer": "Only if you want to charge for hub access.\n\nBrowsing, contributing free hubs, and finding work on Library do not need Stripe."
+      },
+      {
+        "id": "subscription",
+        "question": "Can I charge a subscription?",
+        "answer": "Yes. You can offer a one-time purchase for ongoing hub access, or a monthly subscription. Some hubs may also offer free trials."
+      },
+      {
+        "id": "collaborate",
+        "question": "Can I collaborate with others on a hub?",
+        "answer": "Yes. Invite collaborators and give them roles (OWNER, ADMIN, WRITE, COMMENT, READ). Unlimited collaborators are included on Free and Growth. Collaborators are not the same as paywall buyers. How-to: /help/collaborators-and-roles."
+      },
+      {
+        "id": "get-discovered",
+        "question": "How do I get discovered?",
+        "answer": "List a public hub on Library. Keep your creator profile up to date. Share your profile or hub link.\n\nProfile setup: /help/profile-and-sharing. You can also earn Aura when people endorse your hub."
+      },
+      {
+        "id": "verified-badge",
+        "question": "What is a verified creator badge?",
+        "answer": "Creators with Stripe Connect charge-ready (charges_enabled) may show a verified badge on their profile or paywall. Connect setup may include identity checks Stripe requires.\n\nIt helps buyers trust who you are. It does not boost Library ranking. How-to: /help/profile-and-sharing and /help/turn-on-paid-access."
+      },
+      {
+        "id": "adult-content",
+        "question": "Is adult content allowed?",
+        "answer": "Yes, you can flag a hub as adult content. Those hubs are filtered on Library by default and are not SEO-indexed like general listed hubs.\n\nBuyers must be logged in and confirm they are 18+ with their date of birth before they can open them. How-to: /help/adult-content-and-age-verification."
+      },
+      {
+        "id": "fork-hub",
+        "question": "Can I fork or duplicate a hub?",
+        "answer": "When permissions allow, you can duplicate or fork a hub’s structure. What you can do depends on product settings."
+      }
+    ]
+  },
+  {
+    "title": "For buyers",
+    "items": [
+      {
+        "id": "how-buy",
+        "question": "How do I buy a digital product on Kahana?",
+        "answer": "Browse Library or a creator’s profile, open a hub, and check out on the paywall.\n\nWhen payment goes through, the hub unlocks in your account. Step-by-step: /help/buying-and-access."
+      },
+      {
+        "id": "browse-without-account",
+        "question": "Can I browse without an account?",
+        "answer": "Yes, for most public hubs on Library. Adult content and some purchases need you to log in."
+      },
+      {
+        "id": "after-pay",
+        "question": "What do I get after I pay?",
+        "answer": "You get access to that hub’s content in your Kahana account.\n\nOne-time purchases usually keep access going. Monthly products need an active subscription. Open the same hub URL while logged into the account that paid. Details: /help/buying-and-access."
+      },
+      {
+        "id": "refunds",
+        "question": "How do refunds work?",
+        "answer": "Payments and disputes follow Stripe and Kahana’s terms / published refund policy.\n\nFor help, use in-app Support (/support) or the channels listed in product settings. Buyer guide: /help/buying-and-access."
+      },
+      {
+        "id": "payment-secure",
+        "question": "Is my payment secure?",
+        "answer": "Checkout runs on Stripe. Kahana does not store your full card number."
+      },
+      {
+        "id": "free-vs-paid",
+        "question": "How do I find free vs paid hubs?",
+        "answer": "On Library, filter by free or paid, price range, or category. You can also search."
+      },
+      {
+        "id": "aura-pay",
+        "question": "What is Aura? Do I pay for it?",
+        "answer": "Aura is limited. You can give up to 5 Aura per day. Your Aura renews daily: at midnight UTC you get 5 Aura again.\n\nAura is not money and not crypto. It is a way to endorse hubs and files inside hubs that you value, see who gave Aura, and help the best work rise. When you give Aura to a file, that hub also receives 1 Aura. You cannot give Aura to your own hubs or files. How-to: /help/how-aura-works. Longer story: about.kahana.io/aura."
+      }
+    ]
+  },
+  {
+    "title": "Aura and community",
+    "items": [
+      {
+        "id": "what-is-aura",
+        "question": "What is Aura?",
+        "answer": "Aura is how Kahana promotes quality. You automatically have up to 5 Aura to give each day. Give it to hubs or to files inside hubs—all on one target, or split across a few.\n\nAura is not money and not crypto. You can see who gave it. Because your Aura is scarce, you give it carefully. That helps the best work rise. File Aura also lifts the hub by +1 and surfaces noteworthy files in search and ranking; hub Aura does not roll down to files.\n\nYou cannot give Aura to your own hubs or files. Rules and steps: /help/how-aura-works. Philosophy: about.kahana.io/aura."
+      },
+      {
+        "id": "aura-vs-reviews",
+        "question": "How is Aura different from star ratings or written reviews?",
+        "answer": "Star ratings and written reviews often fail both sides. One negative review can outweigh many careful positive ones. People chase review counts more than the score. A perfect 5.0 with one review feels thin. Too many glowing reviews can feel fake.\n\nAura is different on purpose. You have a small daily budget that is yours to give and take. Scarcity makes each endorsement mean more. You can see who gave Aura. You cannot endorse your own hubs or files. We wanted a signal built for quality, not another messy review pile."
+      },
+      {
+        "id": "aura-budget",
+        "question": "How much Aura can I give?",
+        "answer": "You automatically have 5 Aura to give each day.\n\nGive all of your Aura to one hub or file, or split it across a few. At midnight UTC you get 5 Aura again, even if you used all 5 already. You cannot give Aura to your own hubs or files. Full how-to: /help/how-aura-works."
+      },
+      {
+        "id": "aura-given-stays",
+        "question": "Does the Aura I already gave reset every day?",
+        "answer": "No. Daily renewal is a fresh budget of 5 Aura to give. Aura you already placed on a hub or file stays there. It does not vanish overnight.\n\nYou control it. If you change your mind later, you can remove Aura you gave."
+      },
+      {
+        "id": "aura-need-hub",
+        "question": "Do I need to create a hub to give Aura?",
+        "answer": "No. Anyone with an account can give Aura. Creating a hub is how you add knowledge to the library. It is not required to endorse hubs or files you find on Library."
+      },
+      {
+        "id": "aura-to-person",
+        "question": "Can I give Aura to a person or creator?",
+        "answer": "No. You cannot give Aura directly to profiles, hub owners, or other users as people. You can give Aura to hubs of digital artifacts, and to files inside those hubs. When you give Aura to a file, that hub also receives 1 Aura; giving Aura to a hub does not add Aura to the files inside it."
+      },
+      {
+        "id": "how-create",
+        "question": "How do I create and contribute on Kahana?",
+        "answer": "Create a hub, add digital artifacts (files, videos, images, PDFs, documents, links, and more), then optimize with clear names, tags, and a description. List it on Library when you are ready.\n\nYou can invite editors and admins to collaborate. Turn on paid access later if you want."
+      },
+      {
+        "id": "aura-streak",
+        "question": "What is an Aura streak?",
+        "answer": "Giving Aura on consecutive days builds a streak in the app. It nudges you to keep exploring. It is not a cash reward."
+      },
+      {
+        "id": "aura-official",
+        "question": "Does Aura mean a hub is officially recommended by Kahana?",
+        "answer": "No. Aura comes from the community. Kahana may still curate or moderate listings on its own."
+      }
+    ]
+  },
+  {
+    "title": "Library and discovery",
+    "items": [
+      {
+        "id": "what-is-explore",
+        "question": "What is Library?",
+        "answer": "Library is the public catalog at /library.\n\nBrowse hubs or creators. Search and filter by category, price, free or paid, and more."
+      },
+      {
+        "id": "listing-fee",
+        "question": "Do I need to pay to list on Library?",
+        "answer": "No separate listing fee. You just need to meet the public listing requirements.\n\nPlatform and Stripe fees only apply when someone buys a paid hub. Free hubs can still appear when listed."
+      },
+      {
+        "id": "hub-not-on-explore",
+        "question": "Why isn’t my hub on Library?",
+        "answer": "Often the hub is not public yet, not listed yet, missing listing details (title, cover, description, category, profile pic, adult yes/no), or filtered by adult settings. Sometimes there is a short delay while it indexes.\n\nSelf-check the readiness table: /help/list-hub-on-explore."
+      },
+      {
+        "id": "what-is-for-you",
+        "question": "What is For You?",
+        "answer": "For You is a Library tab that ranks hubs from your Aura, saves, follows, and For you / Not for you marks. You can change signal weights in the tab.\n\nGuide: /help/for-you-and-taste."
+      },
+      {
+        "id": "what-are-clubs",
+        "question": "What are Clubs?",
+        "answer": "Clubs are groups that read and list together. A new club always starts private. You can later make it unlisted or listed on the public Clubs page, with auto-join or request-to-join.\n\nMembers share a wish list, feed, events, and optional current focus. Guide: /help/clubs."
+      }
+    ]
+  },
+  {
+    "title": "Accounts, privacy, and trust",
+    "items": [
+      {
+        "id": "sign-up",
+        "question": "How do I sign up?",
+        "answer": "Use email or Google at kahana.io/signup. Or open Sign in, then Create account."
+      },
+      {
+        "id": "get-help",
+        "question": "How do I get help?",
+        "answer": "In the app, use Support (/support) or Send feedback from Settings & support.\n\nFor company info, visit about.kahana.io. Growth plans include live chat support."
+      },
+      {
+        "id": "privacy-terms",
+        "question": "Where are Privacy and Terms?",
+        "answer": "You can find them in the guest menu. They are usually at kahana.io/privacy-policy and kahana.io/terms-and-conditions."
+      },
+      {
+        "id": "age-verification",
+        "question": "How does age verification work for adult hubs?",
+        "answer": "You must be logged in and enter your date of birth. If you are 18+, verification is recorded.\n\nThere is no anonymous “I’m 18” unlock. Details: /help/adult-content-and-age-verification."
+      },
+      {
+        "id": "delete-account",
+        "question": "How do I delete my Kahana account?",
+        "answer": "Open Settings → Danger Zone at /settings/danger. Type DELETE to confirm. Your account is deactivated immediately. Permanent deletion follows in 30 days unless you sign in and cancel.\n\nGuide: /help/delete-my-account."
+      }
+    ]
+  },
+  {
+    "title": "Billing and Growth",
+    "items": [
+      {
+        "id": "upgrade-growth",
+        "question": "When should I upgrade to Growth?",
+        "answer": "Upgrade when you need a 4th hub, Free upload limits feel tight, you need larger files, or you want live chat support.\n\nYou do not need Growth to list on Library or sell with Stripe. Growth does not remove the 5% marketplace fee.\n\nHow-to: /help/when-to-upgrade. Compare plans on /pricing or Billing in the app."
+      },
+      {
+        "id": "cancel-growth",
+        "question": "How do I cancel Growth?",
+        "answer": "Manage your subscription from Billing in settings.\n\nYou keep access through the end of the paid period."
+      },
+      {
+        "id": "free-still-fee",
+        "question": "Do Free creators still pay the 5% marketplace fee?",
+        "answer": "Yes. The 5% fee applies to hub sales on Free and Growth.\n\nGrowth gives you higher limits and support. It does not remove the marketplace fee. When to upgrade: /help/when-to-upgrade."
+      }
+    ]
+  },
+  {
+    "title": "Technical and compatibility",
+    "items": [
+      {
+        "id": "browsers",
+        "question": "What browsers are supported?",
+        "answer": "Modern browsers like Chrome, Safari, Firefox, and Edge. Use a current desktop or mobile browser for the best experience."
+      },
+      {
+        "id": "mobile-app",
+        "question": "Is there a native mobile app?",
+        "answer": "Kahana is a web app that works well in mobile browsers."
+      },
+      {
+        "id": "embed",
+        "question": "Can I embed Kahana on my own site?",
+        "answer": "The usual path is linking your Kahana profile or hub URL."
+      }
+    ]
+  }
+]

@@ -1,0 +1,4 @@
+{
+  "knowledgeSourceRoot": "/absolute/path/to/Kahana/kahana-homepage-public",
+  "faqExportPath": "/absolute/path/to/faq-sections.json"
+}
