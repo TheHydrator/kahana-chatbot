@@ -2,6 +2,8 @@
 
 This folder is an isolated workspace for the Kahana AI chatbot.
 
+**Authors:** Rohit Goutam Maity , Kunal Jatin Tamhane
+
 **GitHub Repository:** [https://github.com/TheHydrator/kahana-chatbot](https://github.com/TheHydrator/kahana-chatbot)
 
 ## Production boundary
