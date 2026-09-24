@@ -31,18 +31,31 @@ function createStreamingBubble() {
   const row = document.createElement('div');
   row.className = 'message-row agent-row';
   const icon = document.createElement('div');
-  icon.className = 'mini-agent';
+  icon.className = 'mini-agent thinking';
   icon.textContent = 'AI';
   const bubble = document.createElement('div');
   bubble.className = 'agent-bubble live-answer';
+
+  const indicator = document.createElement('div');
+  indicator.className = 'typing-indicator';
+
+  const spinner = document.createElement('span');
+  spinner.className = 'loading-spinner';
+
+  const text = document.createElement('span');
+  text.className = 'thinking-text';
+  text.textContent = 'Kahana AI is thinking';
+
   const dots = document.createElement('div');
-  dots.className = 'typing-indicator';
+  dots.className = 'dots';
   for (let i = 0; i < 3; i++) dots.append(document.createElement('span'));
-  bubble.append(dots);
+
+  indicator.append(spinner, text, dots);
+  bubble.append(indicator);
   row.append(icon, bubble);
   thread.append(row);
   thread.scrollTop = thread.scrollHeight;
-  return bubble;
+  return { row, bubble, icon };
 }
 
 function appendCitations(bubble, citations) {
@@ -80,54 +93,73 @@ input.addEventListener('keydown', (event) => {
 });
 
 async function streamQuestion(message) {
-  const response = await fetch('/api/chat/stream', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ question: message }),
-  });
-  if (!response.ok) throw new Error(`Stream failed: ${response.status}`);
+  const sendButton = document.querySelector('.send-button');
+  sendButton.classList.add('loading');
+  sendButton.disabled = true;
+  input.disabled = true;
+  input.placeholder = 'Kahana AI is thinking...';
 
-  const bubble = createStreamingBubble();
-  // Yield to the browser's render pipeline so dots are painted before
-  // we start consuming the stream (fast/buffered responses skip this otherwise)
-  await new Promise((resolve) => requestAnimationFrame(resolve));
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
+  // Immediately render thinking bubble and spinner so user sees instant feedback
+  const { row, bubble, icon } = createStreamingBubble();
   let textNode = null;
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n');
-    buffer = lines.pop() ?? '';
+  try {
+    const response = await fetch('/api/chat/stream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: message }),
+    });
+    if (!response.ok) throw new Error(`Stream failed: ${response.status}`);
 
-    for (const line of lines) {
-      if (!line.startsWith('data: ')) continue;
-      let event;
-      try { event = JSON.parse(line.slice(6)); } catch { continue; }
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
 
-      if (event.type === 'chunk') {
-        if (!textNode) {
-          bubble.querySelector('.typing-indicator')?.remove();
-          textNode = document.createTextNode('');
-          bubble.append(textNode);
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? '';
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        let event;
+        try { event = JSON.parse(line.slice(6)); } catch { continue; }
+
+        if (event.type === 'chunk') {
+          if (!textNode) {
+            bubble.querySelector('.typing-indicator')?.remove();
+            icon.classList.remove('thinking');
+            textNode = document.createTextNode('');
+            bubble.append(textNode);
+          }
+          textNode.textContent += event.text;
+          thread.scrollTop = thread.scrollHeight;
+        } else if (event.type === 'done') {
+          appendCitations(bubble, event.citations);
+          thread.scrollTop = thread.scrollHeight;
         }
-        textNode.textContent += event.text;
-        thread.scrollTop = thread.scrollHeight;
-      } else if (event.type === 'done') {
-        appendCitations(bubble, event.citations);
-        thread.scrollTop = thread.scrollHeight;
       }
     }
+  } catch (error) {
+    if (!textNode) {
+      row.remove();
+    }
+    throw error;
+  } finally {
+    sendButton.classList.remove('loading');
+    sendButton.disabled = false;
+    input.disabled = false;
+    input.placeholder = 'Ask anything about Kahana...';
+    input.focus();
   }
 }
 
 composer.addEventListener('submit', async (event) => {
   event.preventDefault();
   const message = input.value.trim();
-  if (!message) return;
+  if (!message || input.disabled) return;
   addMessage(message, 'user');
   input.value = '';
   document.querySelector('.send-button').classList.remove('ready');
