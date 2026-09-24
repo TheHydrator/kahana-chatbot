@@ -1,6 +1,8 @@
-# Chatbot Workspace
+# Kahana Chatbot Workspace
 
-This folder is an isolated workspace for the Kahana chatbot.
+This folder is an isolated workspace for the Kahana AI chatbot.
+
+**GitHub Repository:** [https://github.com/TheHydrator/kahana-chatbot](https://github.com/TheHydrator/kahana-chatbot)
 
 ## Production boundary
 
@@ -47,12 +49,12 @@ ui/                      -> browser sidebar chat panel
 | Greetings | `src/chatbotService.js` | Done — hi / hello / hey / whatsup etc. get a friendly reply |
 | Guardrails | `src/chatbotService.js` | Done — blocks security, credentials, data-modification questions |
 | LLM answers | `src/chatbotService.js` | Done — Gemini Flash Lite synthesizes natural answers from retrieved docs |
-| Retry logic | `src/chatbotService.js` | Done — retries Gemini once (700ms delay) before falling back |
+| Retry logic | `src/chatbotService.js` | Done — retries Gemini once (300ms delay, 6s timeout) before falling back |
 | Streaming (TTFT) | `src/chatbotService.js` + `server.js` | Done — SSE stream, first token visible immediately |
 | Fallback streaming | `src/chatbotService.js` | Done — keyword answer streamed in 40-char chunks if Gemini fails |
 | HTTP server | `server.js` | Done — SSE + JSON endpoints, static UI, health check |
-| Streaming UI | `ui/app.js` | Done — bubble appears instantly, text streams token-by-token |
-| Typing indicator | `ui/app.js` + `ui/styles.css` | Done — three animated dots while waiting for first token |
+| Live website overlay | `ui/index.html` + `ui/styles.css` | Done — embeds live `kahana.io` in full-bleed background behind sidebar |
+| Loading & thinking state | `ui/app.js` + `ui/styles.css` | Done — instant thinking bubble, spinning loader, animated dots, pulsing avatar, disabled composer |
 | Enter to send | `ui/app.js` | Done — Enter sends, Shift+Enter creates new line |
 | FAQ export | `data/faq-export.json` | Generated from `kahana-homepage-public/data/platformFaq.js` |
 
