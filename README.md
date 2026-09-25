@@ -46,7 +46,9 @@ ui/                      -> browser sidebar chat panel
 | Layer | File | Status |
 |-------|------|--------|
 | Knowledge loader | `src/knowledgeSource.js` | Done — loads 26 help docs + 56 FAQ items |
-| Retrieval engine | `src/retrieval.js` | Done — token search, stop-word filter, score threshold, intent boosts |
+| Retrieval engine | `src/retrieval.js` | Done — token search, stop-word filter, score threshold, intent boosts, pronoun/contextual query expansion |
+| Multi-turn session memory | `src/chatbotService.js` + `src/retrieval.js` + `ui/app.js` | Done — maintains conversational context across turns, persists in session/local storage by user ID, with header Clear button |
+| Structured "How-to" steps | `src/chatbotService.js` | Done — questions starting with "How" automatically generate numbered step-by-step bulleted instructions |
 | Off-topic rejection | `src/retrieval.js` | Done — off-topic questions (weather, pizza) correctly return no match |
 | Greetings | `src/chatbotService.js` | Done — hi / hello / hey / whatsup etc. get a friendly reply |
 | Guardrails | `src/chatbotService.js` | Done — blocks security, credentials, data-modification questions |
@@ -56,6 +58,7 @@ ui/                      -> browser sidebar chat panel
 | Fallback streaming | `src/chatbotService.js` | Done — keyword answer streamed in 40-char chunks if Gemini fails |
 | HTTP server | `server.js` | Done — SSE + JSON endpoints, static UI, health check |
 | Live website overlay | `ui/index.html` + `ui/styles.css` | Done — embeds live `kahana.io` in full-bleed background behind sidebar |
+| Sidebar Ribbon AI Launcher | `ui/index.html` + `ui/styles.css` | Done — 4-edged star AI button positioned in bottom-left ribbon next to Translate (`文A`) with calibrated equal spacing |
 | Loading & thinking state | `ui/app.js` + `ui/styles.css` | Done — instant thinking bubble, spinning loader, animated dots, pulsing avatar, disabled composer |
 | Enter to send | `ui/app.js` | Done — Enter sends, Shift+Enter creates new line |
 | FAQ export | `data/faq-export.json` | Generated from `kahana-homepage-public/data/platformFaq.js` |
@@ -150,14 +153,21 @@ curl http://localhost:4173/api/health
 ```bash
 curl -N -X POST http://localhost:4173/api/chat/stream \
   -H "Content-Type: application/json" \
-  -d '{"question":"what is a hub"}'
+  -d '{
+    "question": "How do I earn from it?",
+    "history": [
+      { "role": "user", "text": "What is Aura?" },
+      { "role": "model", "text": "Aura is Kahana’s engagement reward system..." }
+    ],
+    "userId": "optional-user-id"
+  }'
 ```
 
 SSE event stream — each line is `data: <json>`:
 
 ```
-data: {"type":"chunk","text":"A hub is"}
-data: {"type":"chunk","text":" a curated space..."}
+data: {"type":"chunk","text":"To earn Aura"}
+data: {"type":"chunk","text":" in Kahana, follow these steps:..."}
 data: {"type":"done","responseType":"ANSWER_FROM_KNOWLEDGE_BASE","citations":[...]}
 ```
 
@@ -166,7 +176,10 @@ data: {"type":"done","responseType":"ANSWER_FROM_KNOWLEDGE_BASE","citations":[..
 ```bash
 curl -X POST http://localhost:4173/api/chat \
   -H "Content-Type: application/json" \
-  -d '{"question":"what is a hub"}'
+  -d '{
+    "question": "what is a hub",
+    "history": []
+  }'
 ```
 
 ---

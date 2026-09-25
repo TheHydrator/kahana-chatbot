@@ -68,26 +68,67 @@ function answerFromHelpRecord(record, question) {
   return text || sections.slice(0, 4).join('\n\n');
 }
 
-function buildPrompt(question, matches) {
+function isHowQuestion(question) {
+  return /^\s*how\b/i.test(question);
+}
+
+function formatFallbackSteps(text) {
+  const sentences = text
+    .split(/(?<=[.?!])\s+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 8);
+  if (sentences.length > 1) {
+    return sentences.slice(0, 5).map((s, idx) => `• Step ${idx + 1}: ${s}`).join('\n');
+  }
+  return `• ${text}`;
+}
+
+function buildSystemInstruction(matches, question = '') {
   const context = matches.slice(0, 3).map((doc) =>
     `## ${doc.title}\n${doc.answer || doc.text.slice(0, 800)}`
   ).join('\n\n---\n\n');
 
-  return `You are Kahana's helpful AI assistant. Answer the user's question using only the Kahana documentation provided below. Be concise (3–5 sentences max), friendly, and accurate. Do not mention Firebase, internal architecture, or anything not in the docs. If the docs don't fully cover the question, say so briefly and point the user to the Help centre.
+  const howInstruction = isHowQuestion(question)
+    ? `\nCRITICAL FORMATTING INSTRUCTION: The user's question starts with "How". You MUST provide your answer as a clear, sequential step-by-step list using bullet points (e.g.:\n• Step 1: ...\n• Step 2: ...\n• Step 3: ...). Keep each step concise and actionable based directly on the documentation.`
+    : `\nFORMATTING GUIDELINE: If the user asks for how-to guidance or instructions, format your response in clear step-by-step bullet points.`;
+
+  return `You are Kahana's helpful AI assistant. Answer the user's question using only the Kahana documentation provided below. Be concise (3–5 sentences or steps max), friendly, and accurate. Maintain context from earlier messages in this conversation to answer follow-up questions and pronouns accurately.${howInstruction} Do not mention Firebase, internal architecture, or anything not in the docs. If the docs don't fully cover the question, say so briefly and point the user to the Help centre.
 
 --- KAHANA DOCS ---
 ${context}
---- END DOCS ---
-
-User question: ${question}
-
-Answer:`;
+--- END DOCS ---`;
 }
 
-async function* geminiStream(question, matches, apiKey) {
+function formatHistoryForGemini(history = []) {
+  if (!Array.isArray(history) || !history.length) return [];
+  const formatted = [];
+  for (const item of history) {
+    if (!item || typeof item.text !== 'string' || !item.text.trim()) continue;
+    const role = (item.role === 'agent' || item.role === 'assistant' || item.role === 'model') ? 'model' : 'user';
+    formatted.push({
+      role,
+      parts: [{ text: item.text.trim() }],
+    });
+  }
+
+  const recent = formatted.slice(-6);
+  while (recent.length > 0 && recent[0].role !== 'user') {
+    recent.shift();
+  }
+  return recent;
+}
+
+async function* geminiStream(question, matches, apiKey, history = []) {
   const abort = new AbortController();
-  const timer = setTimeout(() => abort.abort(), 6000);
+  const timer = setTimeout(() => abort.abort(), 7000);
   let response;
+
+  const historyContents = formatHistoryForGemini(history);
+  const contents = [
+    ...historyContents,
+    { role: 'user', parts: [{ text: question }] },
+  ];
+
   try {
     response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:streamGenerateContent?alt=sse&key=${apiKey}`,
@@ -95,7 +136,8 @@ async function* geminiStream(question, matches, apiKey) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: buildPrompt(question, matches) }] }],
+          systemInstruction: { parts: [{ text: buildSystemInstruction(matches, question) }] },
+          contents,
           generationConfig: { maxOutputTokens: 512, temperature: 0.2 },
         }),
         signal: abort.signal,
@@ -134,8 +176,10 @@ async function* geminiStream(question, matches, apiKey) {
 
 // Streaming entry point — yields { type:'chunk', text } then { type:'done', responseType, citations }
 export async function* streamAnswer(records, question, options = {}) {
+  const history = Array.isArray(options.history) ? options.history : [];
+
   const greeting = checkGreeting(question);
-  if (greeting) {
+  if (greeting && history.length === 0) {
     yield { type: 'chunk', text: greeting.text };
     yield { type: 'done', responseType: greeting.responseType, citations: [] };
     return;
@@ -148,7 +192,7 @@ export async function* streamAnswer(records, question, options = {}) {
     return;
   }
 
-  const matches = retrieve(records, question, options);
+  const matches = retrieve(records, question, { ...options, history });
   if (!matches.length) {
     yield { type: 'chunk', text: 'I could not find a relevant Kahana Help or FAQ answer. Try different wording or open Help for all articles.' };
     yield { type: 'done', responseType: 'I_DONT_UNDERSTAND', citations: [{ label: 'Help', href: '/help' }, { label: 'FAQ', href: '/faq' }] };
@@ -160,7 +204,7 @@ export async function* streamAnswer(records, question, options = {}) {
   if (options.geminiKey) {
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
-        for await (const chunk of geminiStream(question, matches, options.geminiKey)) {
+        for await (const chunk of geminiStream(question, matches, options.geminiKey, history)) {
           yield { type: 'chunk', text: chunk };
         }
         yield { type: 'done', responseType: 'ANSWER_FROM_KNOWLEDGE_BASE', citations };
@@ -176,7 +220,10 @@ export async function* streamAnswer(records, question, options = {}) {
   }
 
   // Fallback: stream in small chunks so TTFT still feels smooth
-  const text = (matches[0].answer || answerFromHelpRecord(matches[0], question));
+  let text = (matches[0].answer || answerFromHelpRecord(matches[0], question));
+  if (isHowQuestion(question) && !text.includes('•') && !text.includes('Step 1')) {
+    text = formatFallbackSteps(text);
+  }
   const CHUNK = 40;
   for (let i = 0; i < text.length; i += CHUNK) {
     yield { type: 'chunk', text: text.slice(i, i + CHUNK) };

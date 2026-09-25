@@ -41,19 +41,19 @@ async function serveStatic(request, response) {
 const server = http.createServer(async (request, response) => {
   try {
     if (request.method === 'POST' && request.url === '/api/chat/stream') {
-      const { question } = await readBody(request);
+      const { question, history, userId, sessionId } = await readBody(request);
       if (typeof question !== 'string' || !question.trim()) return sendJson(response, 400, { error: 'Question is required' });
       response.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' });
-      for await (const event of streamAnswer(records, question, { geminiKey })) {
+      for await (const event of streamAnswer(records, question, { geminiKey, history, userId, sessionId })) {
         response.write(`data: ${JSON.stringify(event)}\n\n`);
       }
       response.end();
       return;
     }
     if (request.method === 'POST' && request.url === '/api/chat') {
-      const { question } = await readBody(request);
+      const { question, history, userId, sessionId } = await readBody(request);
       if (typeof question !== 'string' || !question.trim()) return sendJson(response, 400, { error: 'Question is required' });
-      return sendJson(response, 200, await answerQuestion(records, question, { geminiKey }));
+      return sendJson(response, 200, await answerQuestion(records, question, { geminiKey, history, userId, sessionId }));
     }
     if (request.method === 'GET' && request.url === '/api/health') {
       return sendJson(response, 200, { ok: true, records: records.length, sourceRoot });

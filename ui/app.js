@@ -1,30 +1,142 @@
 const panel = document.querySelector('#agentPanel');
 const closeButton = document.querySelector('#closeButton');
+const clearButton = document.querySelector('#clearButton');
 const reopenButton = document.querySelector('#reopenButton');
 const thread = document.querySelector('#messageThread');
 const composer = document.querySelector('#composer');
 const input = document.querySelector('#messageInput');
 
-function closePanel() {
-  panel.classList.add('closed');
-  reopenButton.classList.add('visible');
+const DEFAULT_WELCOME_TEXT = "Hi! I'm Kahana's AI assistant. Ask me anything about hubs, Aura, earning, clubs, or getting started.";
+
+// Session memory state: list of { role: 'user' | 'model', text: string, citations?: Array }
+let sessionHistory = [];
+
+function getKahanaUser() {
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('firebase:authUser:')) {
+        const data = JSON.parse(localStorage.getItem(key));
+        if (data && data.uid) return { uid: data.uid, email: data.email };
+      }
+    }
+    const raw = localStorage.getItem('userData') || localStorage.getItem('user');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && (parsed.uid || parsed.id)) return { uid: parsed.uid || parsed.id, email: parsed.email };
+    }
+  } catch {}
+  return null;
 }
 
-function addMessage(text, role) {
+function getStorage() {
+  const user = getKahanaUser();
+  if (user) {
+    return {
+      storage: localStorage,
+      key: `kahana_chat_history_${user.uid}`,
+      userId: user.uid,
+    };
+  }
+  return {
+    storage: sessionStorage,
+    key: 'kahana_chat_session_history',
+    userId: null,
+  };
+}
+
+function saveHistory() {
+  try {
+    const { storage, key } = getStorage();
+    storage.setItem(key, JSON.stringify(sessionHistory));
+  } catch {}
+}
+
+function loadHistory() {
+  try {
+    const { storage, key } = getStorage();
+    const raw = storage.getItem(key);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length) {
+        sessionHistory = parsed;
+        renderSavedHistory(parsed);
+        return;
+      }
+    }
+  } catch {}
+  sessionHistory = [];
+  renderWelcome();
+}
+
+function renderWelcome() {
+  thread.innerHTML = '';
   const row = document.createElement('div');
-  row.className = `message-row ${role === 'user' ? 'user-row' : 'agent-row'}`;
+  row.className = 'message-row agent-row';
+  const icon = document.createElement('div');
+  icon.className = 'mini-agent';
+  icon.textContent = 'AI';
   const bubble = document.createElement('div');
-  bubble.className = role === 'user' ? 'user-bubble' : 'agent-bubble';
+  bubble.className = 'agent-bubble welcome';
+  bubble.textContent = DEFAULT_WELCOME_TEXT;
+  row.append(icon, bubble);
+  thread.append(row);
+}
+
+function renderSavedHistory(history) {
+  thread.innerHTML = '';
+  for (const item of history) {
+    addMessage(item.text, item.role, item.citations, false);
+  }
+  thread.scrollTop = thread.scrollHeight;
+}
+
+function clearChat() {
+  sessionHistory = [];
+  try {
+    const { storage, key } = getStorage();
+    storage.removeItem(key);
+    sessionStorage.removeItem('kahana_chat_session_history');
+  } catch {}
+  renderWelcome();
+  input.focus();
+}
+
+function closePanel() {
+  panel.classList.add('closed');
+  if (reopenButton) {
+    reopenButton.classList.remove('active');
+  }
+}
+
+function openPanel() {
+  panel.classList.remove('closed');
+  if (reopenButton) {
+    reopenButton.classList.add('active');
+  }
+}
+
+function addMessage(text, role, citations = [], scroll = true) {
+  const isUser = role === 'user';
+  const row = document.createElement('div');
+  row.className = `message-row ${isUser ? 'user-row' : 'agent-row'}`;
+  const bubble = document.createElement('div');
+  bubble.className = isUser ? 'user-bubble' : 'agent-bubble live-answer';
   bubble.textContent = text;
-  if (role !== 'user') {
+  if (!isUser) {
     const icon = document.createElement('div');
     icon.className = 'mini-agent';
     icon.textContent = 'AI';
     row.append(icon);
+    if (citations && citations.length) {
+      appendCitations(bubble, citations);
+    }
   }
   row.append(bubble);
   thread.append(row);
-  thread.scrollTop = thread.scrollHeight;
+  if (scroll) {
+    thread.scrollTop = thread.scrollHeight;
+  }
 }
 
 function createStreamingBubble() {
@@ -76,11 +188,20 @@ function appendCitations(bubble, citations) {
 }
 
 closeButton.addEventListener('click', closePanel);
-reopenButton.addEventListener('click', () => {
-  panel.classList.remove('closed');
-  reopenButton.classList.remove('visible');
-});
+if (clearButton) {
+  clearButton.addEventListener('click', clearChat);
+}
+if (reopenButton) {
+  reopenButton.addEventListener('click', () => {
+    if (panel.classList.contains('closed')) {
+      openPanel();
+    } else {
+      closePanel();
+    }
+  });
+}
 
+// Event listeners for open/close and composer
 input.addEventListener('input', () => {
   document.querySelector('.send-button').classList.toggle('ready', Boolean(input.value.trim()));
 });
@@ -92,22 +213,25 @@ input.addEventListener('keydown', (event) => {
   }
 });
 
-async function streamQuestion(message) {
+async function streamQuestion(message, history = []) {
   const sendButton = document.querySelector('.send-button');
   sendButton.classList.add('loading');
   sendButton.disabled = true;
   input.disabled = true;
   input.placeholder = 'Kahana AI is thinking...';
 
-  // Immediately render thinking bubble and spinner so user sees instant feedback
   const { row, bubble, icon } = createStreamingBubble();
   let textNode = null;
+  let accumulatedText = '';
+  let finalCitations = [];
+
+  const { userId } = getStorage();
 
   try {
     const response = await fetch('/api/chat/stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question: message }),
+      body: JSON.stringify({ question: message, history, userId }),
     });
     if (!response.ok) throw new Error(`Stream failed: ${response.status}`);
 
@@ -135,17 +259,28 @@ async function streamQuestion(message) {
             bubble.append(textNode);
           }
           textNode.textContent += event.text;
+          accumulatedText += event.text;
           thread.scrollTop = thread.scrollHeight;
         } else if (event.type === 'done') {
-          appendCitations(bubble, event.citations);
+          finalCitations = event.citations || [];
+          appendCitations(bubble, finalCitations);
           thread.scrollTop = thread.scrollHeight;
         }
       }
     }
+
+    sessionHistory.push({
+      role: 'model',
+      text: accumulatedText,
+      citations: finalCitations,
+    });
+    saveHistory();
   } catch (error) {
     if (!textNode) {
       row.remove();
     }
+    sessionHistory.pop();
+    saveHistory();
     throw error;
   } finally {
     sendButton.classList.remove('loading');
@@ -160,11 +295,17 @@ composer.addEventListener('submit', async (event) => {
   event.preventDefault();
   const message = input.value.trim();
   if (!message || input.disabled) return;
+
   addMessage(message, 'user');
+  const historyForRequest = [...sessionHistory];
+  sessionHistory.push({ role: 'user', text: message });
+  saveHistory();
+
   input.value = '';
   document.querySelector('.send-button').classList.remove('ready');
+
   try {
-    await streamQuestion(message);
+    await streamQuestion(message, historyForRequest);
   } catch {
     addMessage('Could not reach the chatbot server. Make sure it is running on port 4173.', 'agent');
   }
@@ -182,3 +323,5 @@ document.querySelectorAll('[data-action]').forEach((button) => {
     window.alert(labels[button.dataset.action]);
   });
 });
+
+loadHistory();
