@@ -59,6 +59,10 @@ ui/                      -> browser sidebar chat panel
 | HTTP server | `server.js` | Done — SSE + JSON endpoints, static UI, health check |
 | Live website overlay | `ui/index.html` + `ui/styles.css` | Done — embeds live `kahana.io` in full-bleed background behind sidebar |
 | Sidebar Ribbon AI Launcher | `ui/index.html` + `ui/styles.css` | Done — 4-edged star AI button positioned in bottom-left ribbon next to Translate (`文A`) with calibrated equal spacing |
+| Pretty-printed outputs & bolding | `src/chatbotService.js` + `ui/app.js` + `ui/styles.css` | Done — intent understanding, smart bolding of key concepts/rules/actions, markdown parser with streaming bold support |
+| Multi-screen responsive layout | `ui/styles.css` + `ui/app.js` + `ui/index.html` | Done — desktop side-by-side reflow, tablet 64px rail docking + backdrop, mobile thumb FAB + full-screen drawer |
+| Draggable panel resize handle | `ui/app.js` + `ui/styles.css` + `ui/index.html` | Done — drag to resize panel (320px–700px), double-click to reset, persisted to localStorage |
+| Thread scrolling & flex containment | `ui/styles.css` | Done — scrollable message thread with flex containment, pinned header and composer, right-aligned user speech bubbles |
 | Loading & thinking state | `ui/app.js` + `ui/styles.css` | Done — instant thinking bubble, spinning loader, animated dots, pulsing avatar, disabled composer |
 | Enter to send | `ui/app.js` | Done — Enter sends, Shift+Enter creates new line |
 | FAQ export | `data/faq-export.json` | Generated from `kahana-homepage-public/data/platformFaq.js` |
@@ -181,6 +185,25 @@ curl -X POST http://localhost:4173/api/chat \
     "history": []
   }'
 ```
+
+---
+
+## Multi-screen responsive layout & output formatting
+
+### 1. Multi-Screen Layout Support
+
+| Screen Size | Left Navigation Pane | AI Launcher Button | Chatbot Panel Behavior |
+| :--- | :--- | :--- | :--- |
+| **Desktop**<br/>(`≥ 1200px`) | **Expanded** (`~260px`) | Docks in the bottom footer ribbon next to Translate (`文A`) with calibrated equal spacing. | Opens side-by-side: automatically adjusts page width (`body.agent-open .original-site`) so cards are never covered. Includes a drag-to-resize handle (320px–700px, double-click to reset). |
+| **Tablet / Compact**<br/>(`769px` – `1199px`) | **Collapsed Rail** (`64px`) | Repositions inside the 64px rail (`left: 16px; bottom: 116px;`), stacking above gear, theme, and language controls. | Acts as an overlay panel (`width: min(390px, 45vw)`). Includes a dimmed backdrop (`.panel-backdrop`) for tap-outside dismissal. |
+| **Mobile**<br/>(`≤ 768px`) | **Hidden** (off-screen drawer) | Transforms into a thumb-friendly Floating Action Button (FAB) (`52px` circle at `bottom: 20px; right: 18px;`). Automatically hides when panel is open. | Opens as a native full-height drawer (`100vw`, `100dvh`) with safe-area insets, touch-sized buttons, and 16px composer text to prevent iOS auto-zoom. |
+| **Small Phones**<br/>(`≤ 380px`) | Hidden | FAB in bottom-right corner. | Compact header that hides subtitle and shrinks button labels to prevent header overflowing. |
+
+### 2. Pretty-Printed Outputs & Smart Bolding
+
+- **Intent Understanding:** The AI analyzes the user's question, directly highlights the core answer in the opening sentence, and bolds critical takeaways (`**Aura**`, `**5 Aura**`, `**Help centre**`, `**Step 1:**`).
+- **Markdown & Streaming Parser:** Renders bold, italics, code, headings, and clean structured lists (`<ul>`/`<ol>`). Supports unclosed markdown auto-closing during SSE streaming for zero visual flicker.
+- **Contained Scrolling:** Thread container uses flexbox containment (`flex: 1 1 0%`, `min-height: 0`, `overflow-y: auto`) with pinned header and composer, preventing off-screen displacement.
 
 ---
 
