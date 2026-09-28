@@ -7,40 +7,92 @@
   --bronze-dark: #65491c;
   --line: #e5ded0;
   --panel: #fffdfa;
+  --panel-width: 390px;
 }
 
 * { box-sizing: border-box; }
-html, body { margin: 0; min-height: 100%; }
-body { font-family: Georgia, 'Times New Roman', serif; color: var(--ink); background: var(--cream); }
+html, body { margin: 0; min-height: 100%; height: 100%; }
+body { font-family: Georgia, 'Times New Roman', serif; color: var(--ink); background: var(--cream); overflow-x: hidden; }
 button, textarea { font: inherit; }
 button { cursor: pointer; }
 
-.prototype-shell { min-height: 100vh; position: relative; overflow: hidden; background: var(--cream); }
-.original-site { position: fixed; inset: 0; background: var(--cream); }
+.prototype-shell { min-height: 100vh; height: 100%; position: relative; overflow: hidden; background: var(--cream); }
+.original-site {
+  position: fixed;
+  inset: 0;
+  background: var(--cream);
+  z-index: 1;
+  transition: right 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
 .original-site iframe { display: block; width: 100%; height: 100%; border: 0; background: white; }
 
-.mock-page { min-height: 100vh; background: linear-gradient(115deg, #fbfaf5 0%, #f4efe3 55%, #eee7d5 100%); }
-.mock-header { height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; border-bottom: 1px solid #e6dfd1; background: rgba(255, 253, 248, .82); }
-.mock-brand, .mock-actions, nav { display: flex; align-items: center; gap: 18px; }
-.mock-brand { font-size: 20px; font-weight: 700; letter-spacing: .2px; }
-.brand-mark { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--bronze); color: white; font-size: 15px; }
-nav { color: #83775f; font-size: 14px; }
-.aura-chip { color: #45666f; border: 1px solid #a8c8d2; border-radius: 18px; padding: 7px 12px; background: #eef8fb; }
-.bell { font-size: 18px; color: #776b56; }
-.avatar { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: #b5c3c1; color: white; }
-.chevron { color: #877960; font-size: 20px; }
-.mock-content { padding: 92px 8vw; max-width: 780px; }
-.eyebrow { text-transform: uppercase; letter-spacing: 2px; font-size: 12px; color: #8d6d30; }
-h1 { font-size: clamp(40px, 5vw, 72px); line-height: .98; font-weight: 500; margin: 22px 0; }
-.mock-copy { max-width: 470px; color: #887c68; font-size: 19px; line-height: 1.5; }
-.price-card { margin-top: 40px; width: min(440px, 100%); border: 1px solid #b59a67; border-radius: 14px; padding: 28px; background: rgba(255, 253, 248, .72); box-shadow: 0 15px 35px rgba(86, 61, 24, .08); }
-.plan-label { font-size: 18px; font-weight: 700; display: block; }
-.price { display: block; font-size: 34px; font-weight: 700; margin-top: 12px; }.price small { font-size: 15px; font-weight: 400; }
-.billing-toggle { margin: 28px 0; display: grid; grid-template-columns: 1fr 1.3fr; border: 1px solid #e6dfd0; border-radius: 12px; overflow: hidden; font-size: 14px; color: #8c805f; }.billing-toggle > * { padding: 12px; text-align: center; }.billing-toggle strong { background: white; color: #514629; }
-.included { color: #7c705c; font-weight: 700; }.price-card ul { padding-left: 20px; color: #6f644f; line-height: 2; }.save-strip { text-align: center; background: #e9e0c7; padding: 9px; border-radius: 7px; font-weight: 700; }.choose-button { width: 100%; margin-top: 22px; border: 0; border-radius: 8px; background: var(--bronze-dark); color: white; padding: 14px; font-weight: 700; }
+/* Backdrop for tablet & mobile */
+.panel-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(43, 31, 14, 0.32);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  z-index: 8;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease;
+}
+.panel-backdrop.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
 
-.agent-panel { position: fixed; z-index: 5; inset: 0 0 0 auto; width: min(390px, 100vw); display: flex; flex-direction: column; background: var(--panel); border-left: 1px solid var(--line); box-shadow: -12px 0 28px rgba(72, 52, 23, .08); transition: transform .22s ease; }.agent-panel.closed { transform: translateX(100%); }
-.agent-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+/* Chatbot Panel */
+.agent-panel {
+  position: fixed;
+  z-index: 10;
+  inset: 0 0 0 auto;
+  width: var(--panel-width);
+  max-width: 100vw;
+  height: 100%;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border-left: 1px solid var(--line);
+  box-shadow: -12px 0 28px rgba(72, 52, 23, .08);
+  transition: transform .24s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+.agent-panel.closed {
+  transform: translateX(100%);
+}
+
+/* Desktop resize handle */
+.panel-resize-handle {
+  position: absolute;
+  left: -4px;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  cursor: col-resize;
+  z-index: 20;
+  transition: background-color 0.15s ease;
+}
+.panel-resize-handle:hover,
+.panel-resize-handle.active {
+  background: rgba(147, 107, 29, 0.3);
+}
+
+.agent-header {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+}
 .agent-heading { display: flex; gap: 11px; align-items: center; }
 .agent-icon, .mini-agent { display: grid; place-items: center; border-radius: 50%; background: var(--cream-deep); color: #918264; font: 700 11px Arial, sans-serif; }
 .agent-icon { width: 34px; height: 34px; }
@@ -89,8 +141,129 @@ h1 { font-size: clamp(40px, 5vw, 72px); line-height: .98; font-weight: 500; marg
   color: #7d6b50;
 }
 .icon-button { border: 0; background: transparent; color: #c2b9a8; font-size: 28px; line-height: 1; }
-.message-thread { flex: 1; overflow-y: auto; padding: 18px 14px 16px; display: flex; flex-direction: column; gap: 13px; font-family: Arial, sans-serif; }.message-row { display: flex; gap: 8px; align-items: flex-end; }.agent-row { align-items: flex-start; }.user-row { justify-content: flex-end; }.agent-bubble, .user-bubble { font-size: 14px; line-height: 1.45; }.agent-bubble { max-width: calc(100% - 34px); padding: 11px 13px; border-radius: 16px 16px 16px 4px; background: var(--cream-deep); color: #5e513a; }.welcome { max-width: 274px; }.user-bubble { max-width: 78%; padding: 10px 13px; border-radius: 16px 16px 4px 16px; background: var(--bronze); color: white; }.resource-card { padding: 13px; }.resource-card p { margin: 0 0 12px; }.resource-link { display: flex; flex-direction: column; gap: 4px; width: 100%; margin: 0 0 14px; padding: 0; border: 0; text-align: left; background: transparent; color: #63491d; }.resource-link strong { font-size: 15px; }.resource-link span, .action-description { color: #877858; font-size: 12px; line-height: 1.4; }.action-button { width: 100%; border-radius: 8px; padding: 8px 10px; font-weight: 700; font-size: 13px; }.action-button.primary { border: 1px solid var(--bronze); background: var(--bronze); color: white; }.action-button.secondary { border: 1px solid #e4dccb; background: white; color: #65563a; }.action-description { display: block; margin: 6px 0 12px; }
-.live-answer { white-space: pre-wrap; }
+
+/* Message thread & scroll container */
+.message-thread {
+  flex: 1 1 0%;
+  min-height: 0;
+  height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  font-family: Arial, sans-serif;
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.message-thread::-webkit-scrollbar {
+  width: 6px;
+}
+.message-thread::-webkit-scrollbar-track {
+  background: transparent;
+}
+.message-thread::-webkit-scrollbar-thumb {
+  background: rgba(147, 107, 29, 0.22);
+  border-radius: 3px;
+}
+.message-thread::-webkit-scrollbar-thumb:hover {
+  background: rgba(147, 107, 29, 0.4);
+}
+
+.message-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  flex-shrink: 0;
+  width: 100%;
+}
+.agent-row {
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+.user-row {
+  justify-content: flex-end;
+}
+
+.user-bubble {
+  max-width: 80%;
+  padding: 10px 14px;
+  border-radius: 16px 16px 4px 16px;
+  background: var(--bronze);
+  color: white;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.agent-bubble {
+  max-width: calc(100% - 34px);
+  padding: 12px 14px;
+  border-radius: 16px 16px 16px 4px;
+  background: var(--cream-deep);
+  color: #52442c;
+  word-break: break-word;
+}
+.welcome { max-width: 310px; }
+
+/* Pretty-printed agent content typography & bold emphasis */
+.agent-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.agent-content p {
+  margin: 0;
+}
+.agent-content strong {
+  font-weight: 700;
+  color: #38270b;
+}
+.agent-content em {
+  font-style: italic;
+  color: #554427;
+}
+.agent-content .chat-list {
+  margin: 2px 0 2px 18px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.agent-content .chat-list li {
+  margin: 0;
+  line-height: 1.45;
+}
+.agent-content .chat-list li strong {
+  color: #38270b;
+}
+.agent-content .chat-heading {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #3b2a0c;
+  margin: 4px 0 0;
+}
+.agent-content .chat-inline-code {
+  background: rgba(147, 107, 29, 0.12);
+  color: #533910;
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+.agent-content .chat-code-block {
+  background: #252019;
+  color: #f7f3ec;
+  padding: 10px 12px;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 12px;
+  margin: 4px 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
 .mini-agent.thinking {
   background: var(--bronze);
   color: white;
@@ -145,8 +318,14 @@ h1 { font-size: clamp(40px, 5vw, 72px); line-height: .98; font-weight: 500; marg
   40% { transform: scale(1.1); opacity: 1; }
 }
 
-.answer-citations { margin-top: 12px; padding-top: 9px; border-top: 1px solid rgba(125, 101, 54, .18); color: #927e5a; font-size: 11px; line-height: 1.4; }.answer-citations a { color: #795819; font-weight: 700; text-decoration: underline; }
-.composer { padding: 12px 14px 10px; border-top: 1px solid var(--line); background: rgba(255, 253, 250, .96); }
+.composer {
+  flex-shrink: 0;
+  padding: 12px 14px 10px;
+  border-top: 1px solid var(--line);
+  background: var(--panel);
+  position: relative;
+  z-index: 5;
+}
 .composer textarea { width: calc(100% - 46px); min-height: 50px; resize: none; border: 1px solid var(--line); border-radius: 13px; padding: 14px; color: #5d513d; background: #f3eee2; outline: none; }
 .composer textarea:focus { border-color: #c2a66d; }
 .composer textarea:disabled { opacity: 0.7; cursor: not-allowed; background: #eae5d7; }
@@ -172,44 +351,240 @@ h1 { font-size: clamp(40px, 5vw, 72px); line-height: .98; font-weight: 500; marg
   animation: spin-loader 0.75s linear infinite;
 }
 .composer p { clear: both; margin: 8px 0 0; text-align: center; color: #9a8f7d; font: 11px Arial, sans-serif; }
+/* =======================================================
+   RESPONSIVE MULTI-SCREEN SYSTEM (Desktop / Tablet / Mobile)
+   ======================================================= */
+
+/* Base AI launcher button defaults */
 .ai-ribbon-button {
   position: fixed;
-  left: 98px;
-  bottom: 8px;
   z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
-  min-height: 32px;
-  padding: 0;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  background: transparent;
-  color: #776b56;
   cursor: pointer;
-  transition: all 0.16s ease;
-  box-shadow: none;
-}
-.ai-ribbon-button:hover {
-  background: rgba(147, 107, 29, 0.14);
-  color: #4f3c1c;
-}
-.ai-ribbon-button.active {
-  background: rgba(147, 107, 29, 0.2);
-  color: #65491c;
-  border-color: rgba(147, 107, 29, 0.35);
-}
-.ai-ribbon-button.menu-hidden {
-  opacity: 0;
-  pointer-events: none;
-  z-index: 0;
+  box-sizing: border-box;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
 }
 .ai-ribbon-button .star-icon {
   width: 18px;
   height: 18px;
   display: block;
 }
-@media (max-width: 760px) { nav { display: none; }.mock-content { padding: 55px 24px; }.agent-panel { width: 100vw; }.mock-header { padding: 0 16px; } }
+
+/* -------------------------------------------------------
+   1. DESKTOP SCREENS (>= 1200px)
+   - Left Navigation Pane is expanded (~240-260px)
+   - AI Launcher button docks in the bottom footer ribbon (after translate icon)
+   - Chatbot panel opens side-by-side: reflowing the page so cards are NOT covered!
+   ------------------------------------------------------- */
+@media (min-width: 1200px) {
+  .ai-ribbon-button {
+    left: 104px;
+    bottom: 8px;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: transparent;
+    color: #776b56;
+    transition: all 0.16s ease;
+    box-shadow: none;
+  }
+  .ai-ribbon-button:hover {
+    background: rgba(147, 107, 29, 0.14);
+    color: #4f3c1c;
+  }
+  .ai-ribbon-button.active {
+    background: rgba(147, 107, 29, 0.22);
+    color: #65491c;
+    border-color: rgba(147, 107, 29, 0.38);
+  }
+
+  /* When the chatbot is open on desktop, reflow the embedded website so content is not obscured */
+  body.agent-open .original-site {
+    right: var(--panel-width);
+  }
+
+  .panel-backdrop {
+    display: none !important;
+  }
+}
+
+/* -------------------------------------------------------
+   2. TABLET & COMPACT DESKTOP (769px to 1199px)
+   - Left Navigation Pane collapses into 64px icon rail
+   - AI Launcher button repositions inside the 64px rail, stacked vertically
+   - Chatbot panel overlays with backdrop dismissal
+   ------------------------------------------------------- */
+@media (min-width: 769px) and (max-width: 1199px) {
+  :root {
+    --panel-width: min(390px, 45vw);
+  }
+  .ai-ribbon-button {
+    left: 16px;
+    bottom: 116px;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    padding: 0;
+    border: 1px solid rgba(147, 107, 29, 0.18);
+    border-radius: 6px;
+    background: rgba(255, 253, 248, 0.85);
+    color: #776b56;
+    box-shadow: 0 1px 4px rgba(72, 52, 23, 0.1);
+    transition: all 0.16s ease;
+  }
+  .ai-ribbon-button:hover {
+    background: rgba(147, 107, 29, 0.16);
+    color: #4f3c1c;
+  }
+  .ai-ribbon-button.active {
+    background: rgba(147, 107, 29, 0.24);
+    color: #65491c;
+    border-color: rgba(147, 107, 29, 0.4);
+  }
+
+  .agent-panel {
+    box-shadow: -10px 0 35px rgba(50, 36, 14, 0.18);
+  }
+}
+
+/* -------------------------------------------------------
+   3. MOBILE DEVICES & SMALL SCREENS (<= 768px)
+   - No sidebar visible on screen
+   - AI Launcher button transforms into an accessible Floating Action Button (FAB)
+   - Chatbot panel opens as a native full-screen drawer with safe-area insets
+   ------------------------------------------------------- */
+@media (max-width: 768px) {
+  :root {
+    --panel-width: 100vw;
+  }
+
+  /* Thumb-friendly Floating Action Button */
+  .ai-ribbon-button {
+    left: auto;
+    right: 18px;
+    bottom: max(18px, calc(env(safe-area-inset-bottom, 18px) + 8px));
+    width: 52px;
+    height: 52px;
+    min-width: 52px;
+    min-height: 52px;
+    border-radius: 26px;
+    background: linear-gradient(135deg, #a47b2c 0%, #7d591a 100%);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    box-shadow: 0 6px 20px rgba(92, 65, 20, 0.42), 0 2px 6px rgba(0,0,0,0.12);
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, box-shadow 0.2s ease;
+    z-index: 90;
+  }
+  .ai-ribbon-button:hover {
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 8px 24px rgba(92, 65, 20, 0.52);
+    color: #ffffff;
+  }
+  .ai-ribbon-button:active {
+    transform: scale(0.95);
+  }
+  .ai-ribbon-button .star-icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* Automatically hide the floating button when the panel is open on mobile */
+  body.agent-open .ai-ribbon-button {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.7);
+  }
+
+  /* Mobile fullscreen panel */
+  .agent-panel {
+    width: 100vw;
+    height: 100%;
+    height: 100dvh;
+    border-left: none;
+    border-radius: 0;
+    box-shadow: none;
+    z-index: 1000;
+  }
+  .agent-panel.closed {
+    transform: translateY(100%);
+  }
+
+  /* Hide resize handle on touch/mobile */
+  .panel-resize-handle {
+    display: none;
+  }
+
+  .agent-header {
+    padding-top: max(14px, env(safe-area-inset-top, 14px));
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+  .agent-title-row {
+    font-size: 14px;
+  }
+  .agent-subtitle {
+    font-size: 11px;
+  }
+  .clear-btn {
+    padding: 6px 9px;
+    font-size: 11px;
+  }
+  .close-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 24px;
+  }
+
+  .message-thread {
+    padding: 12px 12px 14px;
+    gap: 10px;
+  }
+  .agent-bubble {
+    max-width: calc(100% - 28px);
+    padding: 11px 12px;
+  }
+  .welcome {
+    max-width: 100%;
+  }
+  .user-bubble {
+    max-width: 84%;
+    padding: 10px 12px;
+  }
+
+  .composer {
+    padding: 10px 12px max(14px, env(safe-area-inset-bottom, 14px));
+  }
+  .composer textarea {
+    font-size: 16px; /* Prevents auto-zoom on iOS */
+    min-height: 46px;
+    padding: 11px 13px;
+  }
+  .send-button {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* 4. Extra Small Phones (<= 380px) */
+@media (max-width: 380px) {
+  .agent-title-row {
+    font-size: 13px;
+  }
+  .agent-subtitle {
+    display: none;
+  }
+  .clear-btn span {
+    display: none;
+  }
+  .clear-btn {
+    padding: 6px 8px;
+  }
+}

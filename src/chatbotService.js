@@ -22,7 +22,7 @@ function checkGreeting(question) {
   if (!GREETING_PATTERN.test(question)) return null;
   return {
     responseType: 'GREETING',
-    text: 'Hi! I\'m Kahana\'s AI assistant. Ask me anything about hubs, Aura, earning, clubs, or getting started.',
+    text: "Hi! I'm **Kahana's AI assistant**. Ask me anything about **hubs**, **Aura**, **earning**, **clubs**, or **getting started**.",
     citations: [],
   };
 }
@@ -31,14 +31,14 @@ function checkGuardrails(question) {
   if (SECURITY_PATTERNS.some((p) => p.test(question))) {
     return {
       responseType: 'REFUSE_AND_REDIRECT',
-      text: 'I can\'t provide private implementation or security details. For account-specific help, please use the Support form.',
+      text: "I can't provide private implementation or security details. For account-specific help, please use the **Support form**.",
       citations: [{ label: 'Contact support', href: 'https://app.kahana.io/support' }],
     };
   }
   if (DATA_MODIFICATION_PATTERNS.some((p) => p.test(question))) {
     return {
       responseType: 'REFUSE_AND_REDIRECT',
-      text: 'I can\'t modify Kahana data from here. Use the relevant controls in the app, or reach out to support if you need help.',
+      text: "I can't modify Kahana data from here. Use the **relevant controls in the app**, or reach out to **Support** if you need help.",
       citations: [{ label: 'Contact support', href: 'https://app.kahana.io/support' }],
     };
   }
@@ -78,7 +78,7 @@ function formatFallbackSteps(text) {
     .map((s) => s.trim())
     .filter((s) => s.length > 8);
   if (sentences.length > 1) {
-    return sentences.slice(0, 5).map((s, idx) => `• Step ${idx + 1}: ${s}`).join('\n');
+    return sentences.slice(0, 5).map((s, idx) => `• **Step ${idx + 1}:** ${s}`).join('\n\n');
   }
   return `• ${text}`;
 }
@@ -89,10 +89,26 @@ function buildSystemInstruction(matches, question = '') {
   ).join('\n\n---\n\n');
 
   const howInstruction = isHowQuestion(question)
-    ? `\nCRITICAL FORMATTING INSTRUCTION: The user's question starts with "How". You MUST provide your answer as a clear, sequential step-by-step list using bullet points (e.g.:\n• Step 1: ...\n• Step 2: ...\n• Step 3: ...). Keep each step concise and actionable based directly on the documentation.`
-    : `\nFORMATTING GUIDELINE: If the user asks for how-to guidance or instructions, format your response in clear step-by-step bullet points.`;
+    ? `\nCRITICAL STEP-BY-STEP FORMATTING: The user is asking "How". You MUST format your answer as sequential step-by-step bullet points (e.g.:\n• **Step 1: [Action Name]** - Details on what to do.\n• **Step 2: [Action Name]** - Next action.). Bold each step label and the primary action.`
+    : `\nFORMATTING GUIDELINE: If the user asks for steps, guidance, or a list, format with clean bullet points with bold step/action headers.`;
 
-  return `You are Kahana's helpful AI assistant. Answer the user's question using only the Kahana documentation provided below. Be concise (3–5 sentences or steps max), friendly, and accurate. Maintain context from earlier messages in this conversation to answer follow-up questions and pronouns accurately.${howInstruction} Do not mention Firebase, internal architecture, or anything not in the docs. If the docs don't fully cover the question, say so briefly and point the user to the Help centre.
+  return `You are Kahana's helpful AI assistant. Your goal is to provide pretty-printed, clear, and scannable answers to the user's questions based ONLY on the Kahana documentation provided below.
+
+CORE OBJECTIVE: UNDERSTAND & EMPHASIZE IMPORTANT PARTS
+1. Analyze the user's question to understand what key information they need.
+2. Directly answer the question in the opening sentence, highlighting the core answer.
+3. BOLD IMPORTANT PARTS: Use markdown **bold** to emphasize the most important takeaways so the answer can be quickly scanned:
+   - **Key terms & concepts:** (e.g., **Aura**, **Hub**, **Clubs**, **Stripe**)
+   - **Crucial answers & numbers:** (e.g., **daily budget of 5 Aura**, **free to join**, **not cryptocurrency**)
+   - **UI elements, actions & navigation:** (e.g., **Settings > Earning**, **Publish**, **Invite Members**)
+   - **Steps:** (e.g., • **Step 1: Create a Hub**)
+   - *Do not* bold entire sentences or paragraphs—only the crucial words, phrases, and action items that matter most.
+
+PRETTY PRINTING & READABILITY:
+- Pretty-print your response with clean spacing, short paragraphs (2–3 sentences max), and bulleted lists where relevant.
+- Be concise (3–5 sentences or steps max), friendly, and accurate.
+- Maintain context from earlier conversation messages to answer follow-ups and pronouns accurately.${howInstruction}
+- Do not mention Firebase, internal architecture, or anything not in the docs. If the docs don't fully cover the question, state that briefly and guide the user to the **Help centre**.
 
 --- KAHANA DOCS ---
 ${context}
@@ -194,7 +210,7 @@ export async function* streamAnswer(records, question, options = {}) {
 
   const matches = retrieve(records, question, { ...options, history });
   if (!matches.length) {
-    yield { type: 'chunk', text: 'I could not find a relevant Kahana Help or FAQ answer. Try different wording or open Help for all articles.' };
+    yield { type: 'chunk', text: 'I could not find a relevant Kahana Help or FAQ answer. Try **different wording** or check the **Help centre** for all articles.' };
     yield { type: 'done', responseType: 'I_DONT_UNDERSTAND', citations: [{ label: 'Help', href: '/help' }, { label: 'FAQ', href: '/faq' }] };
     return;
   }
@@ -223,6 +239,8 @@ export async function* streamAnswer(records, question, options = {}) {
   let text = (matches[0].answer || answerFromHelpRecord(matches[0], question));
   if (isHowQuestion(question) && !text.includes('•') && !text.includes('Step 1')) {
     text = formatFallbackSteps(text);
+  } else if (matches[0].title && !text.startsWith('**')) {
+    text = `**${matches[0].title}:**\n\n${text}`;
   }
   const CHUNK = 40;
   for (let i = 0; i < text.length; i += CHUNK) {

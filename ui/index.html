@@ -12,7 +12,10 @@
         <iframe id="siteFrame" src="https://kahana.io/library" title="Kahana website" allow="clipboard-write"></iframe>
       </section>
 
+      <div class="panel-backdrop" id="panelBackdrop" aria-label="Close chatbot"></div>
+
       <aside class="agent-panel" id="agentPanel" aria-label="Kahana AI Agent">
+        <div class="panel-resize-handle" id="resizeHandle" title="Drag to resize panel (double-click to reset)" aria-label="Resize panel"></div>
         <header class="agent-header">
           <div class="agent-heading">
             <div class="agent-icon">AI</div>
@@ -33,13 +36,13 @@
         </header>
 
         <section class="message-thread" id="messageThread" aria-live="polite">
-          <div class="message-row agent-row"><div class="mini-agent">AI</div><div class="agent-bubble welcome">Hi! I'm Kahana's AI assistant. Ask me anything about hubs, Aura, earning, clubs, or getting started.</div></div>
+          <div class="message-row agent-row"><div class="mini-agent">AI</div><div class="agent-bubble welcome"><div class="agent-content"><p>Hi! I'm <strong>Kahana's AI assistant</strong>. Ask me anything about <strong>hubs</strong>, <strong>Aura</strong>, <strong>earning</strong>, <strong>clubs</strong>, or <strong>getting started</strong>.</p></div></div></div>
         </section>
 
         <form class="composer" id="composer"><textarea id="messageInput" rows="1" placeholder="Ask anything about Kahana..." aria-label="Chat message"></textarea><button class="send-button" type="submit" aria-label="Send">➤</button><p>Kahana AI Agent can make mistakes. Please verify important information.</p></form>
       </aside>
 
-      <button class="ai-ribbon-button" id="reopenButton" title="Kahana AI Agent" aria-label="Toggle Kahana AI Agent">
+      <button class="ai-ribbon-button" id="reopenButton" title="Kahana AI Agent" aria-label="Toggle Kahana AI Agent" aria-expanded="true">
         <svg class="star-icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 2C12 7.52 7.52 12 2 12C7.52 12 12 16.48 12 22C12 16.48 16.48 12 22 12C16.48 12 12 7.52 12 2Z"/>
         </svg>
